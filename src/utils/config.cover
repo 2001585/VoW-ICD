@@ -1,0 +1,41 @@
+    1: """Shared helpers for loading experiment configuration files."""
+    1: from __future__ import annotations
+       
+    1: import json
+    1: from pathlib import Path
+    1: from typing import Any, Dict, Mapping
+       
+       
+    1: PYAML_MESSAGE = "PyYAML이 필요합니다. `pip install pyyaml`로 설치 후 다시 시도하세요."
+       
+       
+    1: def load_config(config_path: Path) -> Dict[str, Any]:
+           """Load YAML or JSON config and attach base directory metadata."""
+    7:     text = config_path.read_text(encoding="utf-8")
+    7:     suffix = config_path.suffix.lower()
+    7:     if suffix in {".yaml", ".yml"}:
+    1:         try:
+    1:             import yaml  # type: ignore
+>>>>>>         except ImportError as exc:  # pragma: no cover - optional dependency
+>>>>>>             raise RuntimeError(PYAML_MESSAGE) from exc
+    1:         data = yaml.safe_load(text)
+           else:
+    6:         data = json.loads(text)
+    7:     if not isinstance(data, dict):
+>>>>>>         raise ValueError("Config file must define a mapping at the top level.")
+    7:     data["base_dir"] = config_path.parent
+    7:     return data
+       
+       
+    1: def resolve_path(base_dir: Path, value: str | Path) -> Path:
+           """Resolve experiment-relative paths to absolute ones."""
+    6:     candidate = Path(value)
+    6:     if candidate.is_absolute():
+    3:         return candidate
+    3:     return (base_dir / candidate).resolve()
+       
+       
+    1: def get_section(raw_config: Mapping[str, Any], key: str) -> Dict[str, Any]:
+           """Return a dictionary section from the config, or an empty dict."""
+   12:     section = raw_config.get(key, {})
+   12:     return dict(section) if isinstance(section, Mapping) else {}

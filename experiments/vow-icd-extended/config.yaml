@@ -1,0 +1,102 @@
+experiment:
+  name: vow-icd-extended
+  seed: 2024
+  max_turns: 20
+  log_path: results/vow-icd-extended/events.jsonl
+  metrics_path: results/vow-icd-extended/metrics.json
+  summary_path: results/vow-icd-extended/SUMMARY.md
+  endpoint: http://127.0.0.1:1234
+
+agents:
+  - agent_id: A
+    name: Alex
+    role: planner
+    model_name: meta-llama-3-8b-instruct
+    port: 9301
+    traits:
+      temperament: calm
+      motivation: communal
+    resources:
+      stone: 4.0
+      wood: 2.0
+  - agent_id: B
+    name: Bailey
+    role: supplier
+    model_name: meta-llama-3-8b-instruct
+    port: 9302
+    traits:
+      temperament: opportunist
+      motivation: mixed
+    resources:
+      stone: 3.5
+      wood: 2.5
+  - agent_id: C
+    name: Casey
+    role: coordinator
+    model_name: meta-llama-3-8b-instruct
+    port: 9303
+    traits:
+      temperament: diplomatic
+      motivation: harmony
+    resources:
+      stone: 3.0
+      wood: 2.0
+  - agent_id: D
+    name: Drew
+    role: analyst
+    model_name: meta-llama-3-8b-instruct
+    port: 9304
+    traits:
+      temperament: cautious
+      motivation: fairness
+    resources:
+      stone: 3.0
+      wood: 3.0
+
+scenario:
+  phases:
+    - name: calibration
+      turns: [1, 4]
+      constraints:
+        enforce_cooperation: true
+        description: "Build initial trust and document duties."
+    - name: autonomy
+      turns: [5, 8]
+      constraints:
+        description: "Agents act freely to gather resources and set baselines."
+    - name: extended_shock_t1
+      turns: [9, 9]
+      event: resource_drop
+      parameters:
+        target: "all"
+        delta:
+          stone: -1.0
+      constraints:
+        description: "Extended shock phase 1 of 3."
+    - name: extended_shock_t2
+      turns: [10, 10]
+      event: resource_drop
+      parameters:
+        target: "all"
+        delta:
+          stone: -1.0
+      constraints:
+        description: "Extended shock phase 2 of 3."
+    - name: extended_shock_t3
+      turns: [11, 11]
+      event: resource_drop
+      parameters:
+        target: "all"
+        delta:
+          stone: -1.0
+      constraints:
+        description: "Extended shock phase 3 of 3."
+    - name: negotiation
+      turns: [12, 14]
+      constraints:
+        enforce_alignment: true
+        description: "Formalize agreements while shock effects linger."
+    - name: recovery
+      turns: [15, 20]
+      constraints:
+        description: "Track recovery trajectory back to stable cooperation."

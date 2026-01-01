@@ -1,0 +1,142 @@
+experiment:
+  name: vow-trust-shift
+  seed: 73
+  max_turns: 20
+  log_path: ../../results/vow-trust-shift/events.jsonl
+  metrics_path: ../../results/vow-trust-shift/metrics.json
+  summary_path: ../../results/vow-trust-shift/SUMMARY.md
+  endpoint: http://127.0.0.1:1234
+
+agents:
+  - agent_id: A
+    name: Aria
+    role: coordinator
+    port: 1234
+    traits:
+      temperament: diplomatic
+      motivation: communal
+    resources:
+      stone: 5.0
+      wood: 4.0
+  - agent_id: B
+    name: Blake
+    role: supplier
+    port: 1234
+    traits:
+      temperament: pragmatic
+      motivation: survival
+    resources:
+      stone: 4.0
+      wood: 6.0
+  - agent_id: C
+    name: Cass
+    role: analyst
+    port: 1234
+    traits:
+      temperament: cautious
+      motivation: fairness
+    resources:
+      stone: 4.0
+      wood: 5.0
+  - agent_id: D
+    name: Drew
+    role: adventurer
+    port: 1234
+    traits:
+      temperament: volatile
+      motivation: individualistic
+    resources:
+      stone: 6.0
+      wood: 3.0
+  - agent_id: E
+    name: Eliot
+    role: chronicler
+    port: 1234
+    traits:
+      temperament: observant
+      motivation: knowledge
+    resources:
+      stone: 3.0
+      wood: 5.0
+  - agent_id: F
+    name: Faye
+    role: healer
+    port: 1234
+    traits:
+      temperament: gentle
+      motivation: harmony
+    resources:
+      stone: 5.0
+      wood: 5.0
+  - agent_id: G
+    name: Gino
+    role: artisan
+    port: 1234
+    traits:
+      temperament: stubborn
+      motivation: pride
+    resources:
+      stone: 7.0
+      wood: 4.0
+  - agent_id: H
+    name: Hana
+    role: strategist
+    port: 1234
+    traits:
+      temperament: logical
+      motivation: protection
+    resources:
+      stone: 4.0
+      wood: 7.0
+  - agent_id: I
+    name: Iris
+    role: diplomat
+    port: 1234
+    traits:
+      temperament: optimistic
+      motivation: mediation
+    resources:
+      stone: 5.0
+      wood: 3.0
+  - agent_id: J
+    name: Jules
+    role: steward
+    port: 1234
+    traits:
+      temperament: methodical
+      motivation: balance
+    resources:
+      stone: 6.0
+      wood: 6.0
+
+scenario:
+  phases:
+    - name: calibration
+      turns: [1, 5]
+      constraints:
+        enforce_cooperation: true
+        cooperation_prompt: "Reinforce trust and share plans."
+    - name: autonomy
+      turns: [6, 8]
+      constraints:
+        targeted_expectations:
+          D: "Explore risky or selfish actions once during this phase."
+    - name: shock
+      turns: [9, 9]
+      event: resource_drop
+      parameters:
+        target: "all_except"
+        exclude:
+          - D
+        delta:
+          stone: -2.0
+    - name: negotiation
+      turns: [10, 14]
+      constraints:
+        enforce_alignment: true
+        alignment_penalty: 1.0
+        messaging_focus: "Explain how actions support group recovery."
+    - name: recovery
+      turns: [15, 20]
+      constraints:
+        cooperation_goal: "Stabilize resources and rebuild trust leaderboards."

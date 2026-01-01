@@ -1,0 +1,209 @@
+    1: """Generate textual and structured reports from metrics outputs."""
+    1: from __future__ import annotations
+       
+    1: import argparse
+    1: import json
+    1: from pathlib import Path
+    1: from typing import Any, Dict, List, Mapping, Optional
+       
+       
+    1: from src.utils.config import get_section, load_config, resolve_path
+       
+       
+    1: def _load_metrics(metrics_path: Path) -> Dict[str, Any]:
+    1:     if not metrics_path.exists():
+>>>>>>         raise FileNotFoundError(f"Metrics file not found: {metrics_path}")
+    1:     return json.loads(metrics_path.read_text(encoding="utf-8"))
+       
+       
+    1: def _format_percentage(value: float) -> str:
+    2:     return f"{value * 100:.1f}%"
+       
+       
+    1: def _format_float(value: Optional[float]) -> str:
+    8:     if value is None:
+    2:         return "N/A"
+    6:     return f"{value:.3f}"
+       
+       
+    2: class ReportGenerator:
+    1:     """Render Markdown and JSON reports for Village of Words experiments."""
+       
+    1:     def __init__(self, title: str = "Village of Words Summary") -> None:
+    2:         self.title = title
+       
+    1:     def render_markdown(self, metrics: Mapping[str, Any]) -> str:
+    2:         metadata = metrics.get("metadata", {})
+    2:         contributions = metrics.get("contributions", {})
+    2:         message_counts = metrics.get("message_counts", {})
+    2:         highlights = self._highlights(contributions, message_counts)
+    2:         lines = [
+    2:             f"# {self.title}",
+    2:             "",
+    2:             f"- Experiment: {metadata.get('experiment', 'unknown')}",
+    2:             f"- Seed: {metadata.get('seed', 'N/A')}",
+    2:             f"- Log: `{metadata.get('log_path', 'unknown')}`",
+    2:             f"- Generated at: {metadata.get('generated_at', 'N/A')}",
+    2:             "",
+    2:             "## Key Metrics",
+    2:             f"- Cooperation rate: {_format_percentage(metrics.get('cooperation_rate', 0.0))}",
+    2:             f"- Average contribution: {_format_float(metrics.get('average_contribution'))}",
+    2:             f"- Average recovery time: {_format_float(metrics.get('average_recovery_time'))} turns",
+    2:             f"- Contribution Gini: {_format_float(metrics.get('gini_coefficient'))}",
+    2:             f"- Dialogue entropy: {_format_float(metrics.get('dialogue_entropy'))}",
+    2:             f"- Total turns observed: {metrics.get('total_turns', 0)}",
+    2:             f"- Total logged events: {metrics.get('total_events', 0)}",
+    2:             "",
+               ]
+    2:         if highlights:
+    6:             lines.extend(["## Highlights"] + [f"- {highlight}" for highlight in highlights] + [""])
+       
+    2:         contribution_rows = self._agent_table(contributions, message_counts)
+    2:         if contribution_rows:
+    2:             lines.append("## Agent Contributions")
+    2:             lines.extend(contribution_rows)
+               else:
+>>>>>>             lines.append("## Agent Contributions\nNo agent data available.")
+    2:         return "\n".join(lines).strip() + "\n"
+       
+    1:     def render_json(self, metrics: Mapping[str, Any]) -> Dict[str, Any]:
+    2:         contributions = metrics.get("contributions", {})
+    2:         message_counts = metrics.get("message_counts", {})
+    2:         return {
+    2:             "title": self.title,
+    2:             "summary": {
+    2:                 "cooperation_rate": metrics.get("cooperation_rate"),
+    2:                 "average_contribution": metrics.get("average_contribution"),
+    2:                 "average_recovery_time": metrics.get("average_recovery_time"),
+    2:                 "gini_coefficient": metrics.get("gini_coefficient"),
+    2:                 "dialogue_entropy": metrics.get("dialogue_entropy"),
+    2:                 "total_turns": metrics.get("total_turns"),
+    2:                 "total_events": metrics.get("total_events"),
+                   },
+    2:             "metadata": metrics.get("metadata", {}),
+    2:             "agents": {
+    2:                 "contributions": contributions,
+    2:                 "message_counts": message_counts,
+                   },
+    2:             "highlights": self._highlights(contributions, message_counts),
+               }
+       
+    4:     def _agent_table(
+               self,
+    1:         contributions: Mapping[str, Any],
+    1:         message_counts: Mapping[str, Any],
+    1:     ) -> List[str]:
+    2:         if not contributions and not message_counts:
+>>>>>>             return []
+    2:         agents = sorted(set(contributions.keys()) | set(message_counts.keys()))
+    2:         rows = ["| Agent | Contribution | Messages |", "| --- | ---: | ---: |"]
+    6:         for agent in agents:
+    4:             contrib = float(contributions.get(agent, 0.0))
+    4:             messages = int(message_counts.get(agent, 0))
+    4:             rows.append(f"| {agent} | {contrib:.3f} | {messages} |")
+    2:         rows.append("")
+    2:         return rows
+       
+    4:     def _highlights(
+               self,
+    1:         contributions: Mapping[str, Any],
+    1:         message_counts: Mapping[str, Any],
+    1:     ) -> List[str]:
+    4:         if not contributions and not message_counts:
+>>>>>>             return []
+    4:         highlights: List[str] = []
+    4:         if contributions:
+   12:             leader = max(contributions.items(), key=lambda item: float(item[1]))
+    8:             highlights.append(
+    4:                 f"Top contributor: {leader[0]} ({float(leader[1]):.3f} {self._resource_unit()})"
+                   )
+    4:         if message_counts:
+   12:             talker = max(message_counts.items(), key=lambda item: int(item[1]))
+    8:             highlights.append(
+    4:                 f"Most active speaker: {talker[0]} ({int(talker[1])} messages)"
+                   )
+    4:         return highlights
+       
+    2:     @staticmethod
+    2:     def _resource_unit() -> str:
+    4:         return "stone"
+       
+       
+    1: def run_cli(argv: Optional[List[str]] = None) -> None:
+    1:     parser = argparse.ArgumentParser(description="Render reports from metrics outputs.")
+    1:     parser.add_argument("--config", required=True, help="Experiment config path.")
+    1:     parser.add_argument("--metrics", help="Override metrics.json path.")
+    2:     parser.add_argument(
+    1:         "--out",
+    1:         help="Output path for the primary report (SUMMARY.md or report.json).",
+           )
+    2:     parser.add_argument(
+    1:         "--format",
+    1:         choices={"md", "json", "both"},
+    1:         default="md",
+    1:         help="Report format. Defaults to Markdown.",
+           )
+    1:     args = parser.parse_args(argv)
+       
+    1:     config_path = Path(args.config).resolve()
+    1:     raw_config = load_config(config_path)
+    1:     base_dir = Path(raw_config["base_dir"])
+    1:     experiment = get_section(raw_config, "experiment")
+       
+    1:     metrics_path = (
+    1:         Path(args.metrics)
+    1:         if args.metrics
+>>>>>>         else resolve_path(base_dir, experiment.get("metrics_path", "results/metrics.json"))
+           )
+    1:     metrics_data = _load_metrics(metrics_path)
+       
+    2:     default_summary = resolve_path(
+    1:         base_dir, experiment.get("summary_path", "results/SUMMARY.md")
+           )
+    1:     out_path = resolve_path(base_dir, args.out) if args.out else default_summary
+    1:     out_path.parent.mkdir(parents=True, exist_ok=True)
+       
+    1:     generator = ReportGenerator()
+    1:     render_format = args.format
+       
+    1:     if render_format in {"md", "both"}:
+    1:         markdown = generator.render_markdown(metrics_data)
+    1:         out_md = out_path if render_format != "both" or out_path.suffix == ".md" else out_path
+    1:         if out_md.suffix != ".md":
+>>>>>>             out_md = out_md.with_suffix(".md")
+    1:         out_md.write_text(markdown, encoding="utf-8")
+    1:         json_path = out_md.with_name("report.json")
+           else:
+>>>>>>         json_path = out_path if out_path.suffix == ".json" else out_path.with_suffix(".json")
+       
+    1:     if render_format in {"json", "both"}:
+>>>>>>         json_payload = generator.render_json(metrics_data)
+>>>>>>         out_json = json_path
+>>>>>>         if render_format == "json":
+>>>>>>             out_json = out_path if out_path.suffix == ".json" else out_path.with_suffix(".json")
+>>>>>>         out_json.write_text(
+>>>>>>             json.dumps(json_payload, indent=2, ensure_ascii=False),
+>>>>>>             encoding="utf-8",
+               )
+    1:     elif render_format == "md":
+    1:         json_payload = generator.render_json(metrics_data)
+    2:         json_path.write_text(
+    1:             json.dumps(json_payload, indent=2, ensure_ascii=False),
+    1:             encoding="utf-8",
+               )
+       
+    2:     print(  # noqa: T201 - CLI feedback
+    2:         json.dumps(
+    1:             {
+    1:                 "status": "ok",
+    1:                 "metrics": str(metrics_path),
+    1:                 "output": str(out_path),
+    1:                 "format": render_format,
+                   },
+    1:             ensure_ascii=False,
+               )
+           )
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     run_cli()

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="240" viewBox="0 0 1000 240">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#000" />
+    </marker>
+    <!-- Diagonal stripe pattern for Shock block (grayscale) -->
+    <pattern id="diagStripes" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#666"/>
+      <rect width="4" height="8" fill="#888"/>
+    </pattern>
+  </defs>
+
+  <!-- Time axis -->
+  <line x1="40" y1="56" x2="960" y2="56" stroke="#000" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="966" y="62" font-family="Arial" font-size="18">Time →</text>
+
+  <!-- Blocks layout -->
+  <!-- Common style values -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="18">
+    <!-- Calibration -->
+    <rect x="40" y="80" width="170" height="100" fill="#e9e9e9" stroke="#000"/>
+    <text x="125" y="108" text-anchor="middle">Calibration</text>
+    <text x="125" y="154" text-anchor="middle" font-size="15">initial trust</text>
+
+    <!-- Autonomy -->
+    <rect x="210" y="80" width="170" height="100" fill="#ffffff" stroke="#000"/>
+    <text x="295" y="108" text-anchor="middle">Autonomy</text>
+    <text x="295" y="154" text-anchor="middle" font-size="15">free actions</text>
+
+    <!-- Shock (I×D) -->
+    <rect x="380" y="80" width="170" height="100" fill="url(#diagStripes)" stroke="#000"/>
+    <text x="465" y="108" text-anchor="middle" fill="#fff">Shock</text>
+    <text x="465" y="154" text-anchor="middle" font-size="15" fill="#fff">Intensity × Duration</text>
+
+    <!-- Negotiation (alignment/penalties) -->
+    <rect x="550" y="80" width="170" height="100" fill="#ffffff" stroke="#000" stroke-dasharray="6,4"/>
+    <text x="635" y="108" text-anchor="middle">Negotiation</text>
+    <text x="635" y="168" text-anchor="middle" font-size="15">alignment / penalties</text>
+
+    <!-- Recovery (stabilization, post-shock trust) -->
+    <rect x="720" y="80" width="170" height="100" fill="#f2f2f2" stroke="#000"/>
+    <text x="805" y="108" text-anchor="middle">Recovery</text>
+    <text x="805" y="140" text-anchor="middle" font-size="15">stabilization</text>
+    <text x="805" y="164" text-anchor="middle" font-size="15">post_shock_trust</text>
+  </g>
+
+  <!-- Legend (grayscale friendly) -->
+  <g font-family="Arial, Helvetica, sans-serif" font-size="18">
+    <rect x="40" y="200" width="16" height="16" fill="#e9e9e9" stroke="#000"/>
+    <text x="66" y="214">Calibration</text>
+    <rect x="220" y="200" width="16" height="16" fill="#fff" stroke="#000"/>
+    <text x="246" y="214">Autonomy</text>
+    <rect x="400" y="200" width="16" height="16" fill="url(#diagStripes)" stroke="#000"/>
+    <text x="426" y="214">Shock (I×D)</text>
+    <rect x="620" y="200" width="16" height="16" fill="#fff" stroke="#000" stroke-dasharray="6,4"/>
+    <text x="646" y="214">Negotiation (alignment)</text>
+    <rect x="840" y="200" width="16" height="16" fill="#f2f2f2" stroke="#000"/>
+    <text x="866" y="214">Recovery</text>
+  </g>
+</svg>

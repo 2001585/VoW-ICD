@@ -1,0 +1,5 @@
+variant,cooperation_mean,cooperation_std,recovery_mean,recovery_std,mismatch_mean,mismatch_std,postcoop_ext_mean,postcoop_ext_std,posttrust_mean,posttrust_std
+Double wave,0.627,0.030,2.952,1.490,0.010,0.000,0.723,0.052,0.375,0.022
+Single drop,0.709,0.022,1.731,0.347,0.003,0.002,0.850,0.024,0.362,0.018
+Soft wave,0.703,0.047,1.460,0.195,0.001,0.001,0.820,0.082,0.488,0.130
+Extended wave,0.716,0.006,1.934,0.424,0.008,0.003,0.833,0.012,0.551,0.113

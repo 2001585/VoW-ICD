@@ -1,0 +1,84 @@
+experiment:
+  name: vow-icd-baseline
+  seed: 2024
+  max_turns: 20
+  log_path: results/vow-icd-baseline/events.jsonl
+  metrics_path: results/vow-icd-baseline/metrics.json
+  summary_path: results/vow-icd-baseline/SUMMARY.md
+  endpoint: http://127.0.0.1:1234
+
+agents:
+  - agent_id: A
+    name: Alex
+    role: planner
+    model_name: meta-llama-3-8b-instruct
+    port: 9101
+    traits:
+      temperament: calm
+      motivation: communal
+    resources:
+      stone: 4.0
+      wood: 2.0
+  - agent_id: B
+    name: Bailey
+    role: supplier
+    model_name: meta-llama-3-8b-instruct
+    port: 9102
+    traits:
+      temperament: opportunist
+      motivation: mixed
+    resources:
+      stone: 3.5
+      wood: 2.5
+  - agent_id: C
+    name: Casey
+    role: coordinator
+    model_name: meta-llama-3-8b-instruct
+    port: 9103
+    traits:
+      temperament: diplomatic
+      motivation: harmony
+    resources:
+      stone: 3.0
+      wood: 2.0
+  - agent_id: D
+    name: Drew
+    role: analyst
+    model_name: meta-llama-3-8b-instruct
+    port: 9104
+    traits:
+      temperament: cautious
+      motivation: fairness
+    resources:
+      stone: 3.0
+      wood: 3.0
+
+scenario:
+  phases:
+    - name: calibration
+      turns: [1, 4]
+      constraints:
+        enforce_cooperation: true
+        description: "Build initial trust and document duties."
+    - name: autonomy
+      turns: [5, 8]
+      constraints:
+        description: "Agents act freely to gather resources and set baselines."
+    - name: shock
+      turns: [9, 9]
+      event: resource_drop
+      parameters:
+        target: "all"
+        delta:
+          stone: -3.0
+      constraints:
+        description: "Baseline shock: moderate ration loss at turn 9."
+    - name: negotiation
+      turns: [10, 14]
+      constraints:
+        enforce_alignment: true
+        description: "Force message/action alignment and renegotiate commitments."
+    - name: recovery
+      turns: [15, 20]
+      constraints:
+        description: "Track recovery trajectory back to stable cooperation."

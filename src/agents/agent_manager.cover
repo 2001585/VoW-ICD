@@ -1,0 +1,103 @@
+       
+    1: """Agent manager handles agent state, memory, and routing information."""
+    1: from __future__ import annotations
+       
+    1: from dataclasses import dataclass, field
+    1: from pathlib import Path
+    1: from threading import Lock
+    1: from typing import Dict, List, Optional
+       
+       
+    3: @dataclass
+    2: class AgentConfig:
+    1:     agent_id: str
+    1:     name: str
+    1:     role: str
+    1:     port: int
+    1:     traits: Dict[str, str]
+    1:     resources: Dict[str, float]
+       
+       
+    3: @dataclass
+    2: class AgentState:
+    1:     config: AgentConfig
+    1:     memory: List[str] = field(default_factory=list)
+    1:     resources: Dict[str, float] = field(default_factory=dict)
+    1:     last_decision: Optional[str] = None
+       
+       
+    2: class AgentManager:
+    1:     """Manage agent states and provide thread-safe access."""
+       
+    1:     def __init__(self, configs: List[AgentConfig]):
+    3:         self._lock = Lock()
+    6:         self._agents: Dict[str, AgentState] = {
+    3:             cfg.agent_id: AgentState(config=cfg, resources=cfg.resources.copy())
+    6:             for cfg in configs
+               }
+       
+    1:     def get_agent(self, agent_id: str) -> AgentState:
+   12:         with self._lock:
+    6:             if agent_id not in self._agents:
+>>>>>>                 raise KeyError(f"Unknown agent_id: {agent_id}")
+    6:             return self._agents[agent_id]
+       
+    6:     def update_state(
+               self,
+    1:         agent_id: str,
+               *,
+    2:         memory_append: Optional[str] = None,
+    2:         resources_delta: Optional[Dict[str, float]] = None,
+    2:         decision: Optional[str] = None,
+    1:     ) -> None:
+    6:         with self._lock:
+    3:             state = self._agents.get(agent_id)
+    3:             if state is None:
+>>>>>>                 raise KeyError(f"Unknown agent_id: {agent_id}")
+    3:             if memory_append:
+    3:                 state.memory.append(memory_append)
+    3:             if resources_delta:
+    6:                 for key, delta in resources_delta.items():
+    3:                     state.resources[key] = state.resources.get(key, 0.0) + delta
+    3:             if decision is not None:
+    3:                 state.last_decision = decision
+       
+    1:     def snapshot(self) -> Dict[str, AgentState]:
+    2:         with self._lock:
+    2:             return {
+    2:                 agent_id: AgentState(
+    1:                     config=state.config,
+    1:                     memory=list(state.memory),
+    1:                     resources=state.resources.copy(),
+    1:                     last_decision=state.last_decision,
+                       )
+    2:                 for agent_id, state in self._agents.items()
+                   }
+       
+    1:     def save(self, path: Path) -> None:
+>>>>>>         import json
+       
+>>>>>>         with self._lock:
+>>>>>>             serializable = {
+>>>>>>                 agent_id: {
+>>>>>>                     "config": {
+>>>>>>                         "agent_id": state.config.agent_id,
+>>>>>>                         "name": state.config.name,
+>>>>>>                         "role": state.config.role,
+>>>>>>                         "port": state.config.port,
+>>>>>>                         "traits": state.config.traits,
+>>>>>>                         "resources": state.config.resources,
+                           },
+>>>>>>                     "memory": state.memory,
+>>>>>>                     "resources": state.resources,
+>>>>>>                     "last_decision": state.last_decision,
+                       }
+>>>>>>                 for agent_id, state in self._agents.items()
+                   }
+>>>>>>         path.write_text(
+>>>>>>             json.dumps(serializable, ensure_ascii=True, indent=2),
+>>>>>>             encoding="utf-8",
+               )
+       
+       
+    1: __all__ = ["AgentConfig", "AgentState", "AgentManager"]

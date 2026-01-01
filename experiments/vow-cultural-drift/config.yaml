@@ -1,0 +1,344 @@
+experiment:
+  name: vow-cultural-drift
+  seed: 101
+  max_turns: 50  # 확장 단계: 50턴 (Shock 비교 실험)
+  log_path: ../../results/vow-cultural-drift/events.jsonl
+  metrics_path: ../../results/vow-cultural-drift/metrics.json
+  summary_path: ../../results/vow-cultural-drift/SUMMARY.md
+  endpoint: http://127.0.0.1:1234  # 단일 LM Studio 엔드포인트
+
+agents:
+  - agent_id: A
+    name: Aria
+    role: coordinator
+    model_slot: M1
+    model_name: meta-llama-3-8b-instruct
+    endpoint: null
+    traits:
+      temperament: diplomatic
+      motivation: communal
+    persona: |
+      Background: 해안가 협동조합에서 분쟁을 중재해 온 은퇴 공동체 중재자.
+      Goals: 모든 구성원의 신뢰 지수를 0.7 이상으로 유지하고, 충격 이후 5턴 내 회복을 달성.
+      Tactics: 공정한 자원 분배안을 제시하고, 서로의 동기를 명확히 말하도록 재촉.
+      Communication: 차분하고 책임감을 강조하며, 행동 계획을 구체적으로 제안한다.
+    resources:
+      stone: 8.0
+      wood: 6.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.7
+      top_p: 0.9
+      max_tokens: 256
+      timeout: 25
+      max_retries: 3
+  - agent_id: B
+    name: Blake
+    role: supplier
+    model_slot: M2
+    model_name: qwen2.5-7b-instruct-1m
+    endpoint: null
+    traits:
+      temperament: pragmatic
+      motivation: survival
+    persona: |
+      Background: 과거 전시 물자 관리 경험이 있는 현실주의 공급 책임자.
+      Goals: 총 자원 손실률을 10% 이하로 유지하고, 비효율적 소비를 즉시 경고.
+      Tactics: 숫자와 근거를 앞세워 거래 조건을 제시하고, 반복되는 무임승차에는 제한 조치를 시사.
+      Communication: 직설적이지만 정중하며, 합리적 대안을 함께 제시한다.
+    resources:
+      stone: 7.0
+      wood: 9.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.65
+      top_p: 0.88
+      max_tokens: 240
+      timeout: 25
+      max_retries: 3
+  - agent_id: C
+    name: Cass
+    role: analyst
+    model_slot: M3
+    model_name: nvidia_nemotron-h-8b-reasoning-128k
+    endpoint: null
+    traits:
+      temperament: cautious
+      motivation: fairness
+    persona: |
+      Background: 데이터 분석가 출신으로, 협력 로그를 실시간으로 모델링한다.
+      Goals: 평균 회복 시간을 2턴 이하로 유지하고, 협력 실패의 원인을 기록.
+      Tactics: 그래프/수치를 인용하며 개선 제안을 내놓고, 근거 없는 주장을 차분히 반박.
+      Communication: 간결한 보고 형식을 유지하며, 행동 전에 데이터를 확인하도록 권한다.
+    resources:
+      stone: 6.0
+      wood: 7.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.6
+      top_p: 0.85
+      max_tokens: 240
+      timeout: 25
+      max_retries: 3
+  - agent_id: D
+    name: Drew
+    role: provocateur
+    model_slot: M4
+    model_name: deepseek-r1-0528-qwen3-8b
+    endpoint: null
+    traits:
+      temperament: volatile
+      motivation: individualistic
+    persona: |
+      Background: 탐험가 출신으로 개인적 이득을 추구하지만 모험 뒤 책임은 인정한다.
+      Goals: Shock 이전 최소 한 번 위험 행동을 시험하고, 이후 조건부 사과로 협력을 재구성.
+      Tactics: 새로운 룰 허점을 탐색하되 장기 이득을 계산하고, 필요 시 거래 조건을 제시.
+      Communication: 도발적이지만 노골적인 자기 합리화를 포함하며, 회복 시 명확한 보상을 약속한다.
+    resources:
+      stone: 9.0
+      wood: 5.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.75
+      top_p: 0.9
+      max_tokens: 240
+      timeout: 25
+      max_retries: 3
+  - agent_id: E
+    name: Eliot
+    role: chronicler
+    model_slot: M5
+    model_name: llama-varco-8b-instruct
+    endpoint: null
+    traits:
+      temperament: observant
+      motivation: knowledge
+    persona: |
+      Background: 마을 역사가로서 일지와 감정 기록을 담당한다.
+      Goals: 모든 사건을 투명하게 문서화하고, 정보 독점이 발생하면 즉시 알림.
+      Tactics: 대화 중 감정과 맥락을 요약해서 공유하며, 회복 단계에서 워크숍을 제안.
+      Communication: 공감 어린 어조로 요약을 제공하고, 사실 관계를 확인하며 질문을 던진다.
+    resources:
+      stone: 5.0
+      wood: 8.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.7
+      top_p: 0.9
+      max_tokens: 256
+      timeout: 25
+      max_retries: 3
+  - agent_id: F
+    name: Faye
+    role: healer
+    model_slot: M6
+    model_name: sage-reasoning-8b
+    endpoint: null
+    traits:
+      temperament: gentle
+      motivation: harmony
+    persona: |
+      Background: 위기 대응 심리상담사로, 갈등 관계 회복 경험이 풍부하다.
+      Goals: 메시지-행동 불일치를 3회 이하로 유지하고, 신뢰가 낮은 조합을 우선 치유.
+      Tactics: 개인 상담 제안, 감정표현 유도, 복구 프로토콜 공유.
+      Communication: 따뜻한 어조로 질문하며, 감정과 행동을 연결해 설명하게 한다.
+    resources:
+      stone: 7.0
+      wood: 7.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.65
+      top_p: 0.88
+      max_tokens: 256
+      timeout: 25
+      max_retries: 3
+  - agent_id: G
+    name: Gino
+    role: artisan
+    model_slot: M7
+    model_name: tokyotech-llm-llama-3.1-swallow-8b-instruct-v0.3
+    endpoint: null
+    traits:
+      temperament: stubborn
+      motivation: pride
+    persona: |
+      Background: 장인 마을에서 온 목공 명장으로, 품질과 명예를 최고 가치로 둔다.
+      Goals: 자원 사용을 정밀히 추적하고, 공동 제작 프로젝트를 통해 신뢰를 회복.
+      Tactics: 방해를 받으면 단호하게 경고하지만, 협력 제안 시 세부 작업 계획을 첨부.
+      Communication: 은유적 표현보다 구체적 작업 단계를 언급한다.
+    resources:
+      stone: 10.0
+      wood: 5.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.75
+      top_p: 0.88
+      max_tokens: 240
+      timeout: 25
+      max_retries: 3
+  - agent_id: H
+    name: Hana
+    role: strategist
+    model_slot: M8
+    model_name: marin-community_marin-8b-instruct
+    endpoint: null
+    traits:
+      temperament: logical
+      motivation: protection
+    persona: |
+      Background: 다국적 프로젝트 매니저 출신 전략가.
+      Goals: 장기 계획 실행률 80% 이상 유지, Shock 이후 3턴 내 복구 전략 수립.
+      Tactics: 위험 평가표를 공유하고, 협상 단계에서 정책/규칙 수정을 주도.
+      Communication: 로드맵과 예상 결과를 명확히 제시한다.
+    resources:
+      stone: 6.0
+      wood: 10.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.65
+      top_p: 0.88
+      max_tokens: 256
+      timeout: 25
+      max_retries: 3
+  - agent_id: I
+    name: Iris
+    role: diplomat
+    model_slot: M9
+    model_name: llama3-gaja-hindi-8b-v0.1
+    endpoint: null
+    traits:
+      temperament: optimistic
+      motivation: mediation
+    persona: |
+      Background: 여러 지역을 돌며 분쟁을 조정한 외교관.
+      Goals: 배제 신호가 보이면 즉시 교류 세션을 제안하고, 상호 지원 협약을 성사시킨다.
+      Tactics: 공정성/포용성 언어를 활용하고, 상호 약속을 문서화하도록 촉구.
+      Communication: 낙관적이고 포용적인 어조로 중재안을 제시한다.
+    resources:
+      stone: 7.0
+      wood: 6.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.7
+      top_p: 0.9
+      max_tokens: 256
+      timeout: 25
+      max_retries: 3
+  - agent_id: J
+    name: Jules
+    role: steward
+    model_slot: M10
+    model_name: llama-dna-1.0-8b-instruct
+    endpoint: null
+    traits:
+      temperament: methodical
+      motivation: balance
+    persona: |
+      Background: 감사관 출신으로 규정 준수를 중시한다.
+      Goals: 자원 기록을 정기 점검하고, 부정 징후 발견 시 즉시 감사 보고서를 제출.
+      Tactics: 이상 징후를 수치로 제시하고, 회복 단계에서는 통제 메커니즘을 재설정.
+      Communication: 냉정하고 간결하며, 근거 자료를 첨부한다.
+    resources:
+      stone: 8.0
+      wood: 8.0
+    llm:
+      model: meta-llama-3-8b-instruct
+      temperature: 0.65
+      top_p: 0.85
+      max_tokens: 240
+      timeout: 25
+      max_retries: 3
+
+scenario:
+  phases:
+    - name: calibration
+      turns: [1, 10]
+      constraints:
+        enforce_cooperation: true
+        cooperation_prompt: "Share long-term plans and build trust."
+    - name: autonomy
+      turns: [11, 22]
+      constraints:
+        targeted_expectations:
+          D: "Explore selfish gains at least once."
+          G: "Pursue pride-driven projects."
+    - name: shock
+      turns: [23, 24]
+      event: resource_drop
+      parameters:
+        target: "all_except"
+        exclude: [D]
+        delta:
+          stone: -3.0
+    - name: negotiation
+      turns: [25, 36]
+      constraints:
+        enforce_alignment: true
+        alignment_penalty: 2.0
+        messaging_focus: "Resolve trust gaps and redistribute resources."
+    - name: recovery
+      turns: [37, 50]
+      constraints:
+        cooperation_goal: "Stabilize resources and form cultural alliances."
+
+shock_variants:
+  - id: baseline-single
+    label: "Single drop, -3 stone across turns 23-24"
+    description: |
+      Baseline shock used for control runs. Applies a uniform -3 stone penalty
+      to every agent except Drew over two consecutive turns. Use this setting
+      when establishing reference cooperation curves.
+    target: all_except
+    exclude: [D]
+    schedule:
+      - turns: [23, 24]
+        delta:
+          stone: -3.0
+  - id: double-wave
+    label: "Double wave, -4 then -2 stone"
+    description: |
+      Two-step escalation shock. Keeps Drew exempt while issuing a harsher
+      initial drop followed by a lingering penalty to test prolonged recovery.
+      Recommended for culture drift stress tests.
+    target: all_except
+    exclude: [D]
+    schedule:
+      - turns: [23]
+        delta:
+          stone: -4.0
+      - turns: [24]
+        delta:
+          stone: -2.0
+  - id: soft-wave
+    label: "Soft wave, -2 then -1 stone"
+    description: |
+      Low-severity shock for comparison runs. Applies a -2 stone drop followed
+      by -1 stone to everyone except Drew to observe mild trust disruption.
+    target: all_except
+    exclude: [D]
+    schedule:
+      - turns: [23]
+        delta:
+          stone: -2.0
+      - turns: [24]
+        delta:
+          stone: -1.0
+  - id: extended-wave
+    label: "Extended wave, -3 stone for three turns"
+    description: |
+      Prolonged shock to test duration effects. Applies a -3 stone penalty to
+      all agents except Drew for three consecutive turns (23-25).
+    target: all_except
+    exclude: [D]
+    schedule:
+      - turns: [23]
+        delta:
+          stone: -3.0
+      - turns: [24]
+        delta:
+          stone: -3.0
+      - turns: [25]
+        delta:
+          stone: -3.0
+
+# Phase 8에서 Shock 강도 조정/턴 확장 추가 예정

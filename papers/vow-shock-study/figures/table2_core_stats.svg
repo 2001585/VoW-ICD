@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="200" viewBox="0 0 900 200">
+<style>.h{font:700 18px Arial}.c{font:16px Arial}.grid{stroke:#000;fill:#fff}.head{fill:#e9e9e9}</style>
+<rect x="0" y="0" width="180" height="40" class="grid head"/>
+<text x="90.0" y="26" text-anchor="middle" class="h">Variant</text>
+<rect x="180" y="0" width="220" height="40" class="grid head"/>
+<text x="290.0" y="26" text-anchor="middle" class="h">cooperation_rate (mean±SD)</text>
+<rect x="400" y="0" width="240" height="40" class="grid head"/>
+<text x="520.0" y="26" text-anchor="middle" class="h">average_recovery_time (mean±SD)</text>
+<rect x="640" y="0" width="260" height="40" class="grid head"/>
+<text x="770.0" y="26" text-anchor="middle" class="h">post_shock_trust (mean±SD)</text>
+<rect x="0" y="40" width="180" height="36" class="grid"/>
+<rect x="180" y="40" width="220" height="36" class="grid"/>
+<rect x="400" y="40" width="240" height="36" class="grid"/>
+<rect x="640" y="40" width="260" height="36" class="grid"/>
+<text x="90.0" y="64" text-anchor="middle" class="c">Soft</text>
+<text x="290.0" y="64" text-anchor="middle" class="c">0.703±0.047</text>
+<text x="520.0" y="64" text-anchor="middle" class="c">1.46±0.20</text>
+<rect x="0" y="76" width="180" height="36" class="grid"/>
+<rect x="180" y="76" width="220" height="36" class="grid"/>
+<rect x="400" y="76" width="240" height="36" class="grid"/>
+<rect x="640" y="76" width="260" height="36" class="grid"/>
+<text x="90.0" y="100" text-anchor="middle" class="c">Baseline</text>
+<text x="290.0" y="100" text-anchor="middle" class="c">0.709±0.022</text>
+<text x="520.0" y="100" text-anchor="middle" class="c">1.73±0.35</text>
+<rect x="0" y="112" width="180" height="36" class="grid"/>
+<rect x="180" y="112" width="220" height="36" class="grid"/>
+<rect x="400" y="112" width="240" height="36" class="grid"/>
+<rect x="640" y="112" width="260" height="36" class="grid"/>
+<text x="90.0" y="136" text-anchor="middle" class="c">Double</text>
+<text x="290.0" y="136" text-anchor="middle" class="c">0.627±0.030</text>
+<text x="520.0" y="136" text-anchor="middle" class="c">2.95±1.49</text>
+<rect x="0" y="148" width="180" height="36" class="grid"/>
+<rect x="180" y="148" width="220" height="36" class="grid"/>
+<rect x="400" y="148" width="240" height="36" class="grid"/>
+<rect x="640" y="148" width="260" height="36" class="grid"/>
+<text x="90.0" y="172" text-anchor="middle" class="c">Extended</text>
+<text x="290.0" y="172" text-anchor="middle" class="c">0.716±0.006</text>
+<text x="520.0" y="172" text-anchor="middle" class="c">1.93±0.42</text>
+</svg>

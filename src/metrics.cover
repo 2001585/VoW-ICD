@@ -1,0 +1,339 @@
+    1: """Metrics computation CLI for Village of Words logs."""
+    1: from __future__ import annotations
+       
+    1: import argparse
+    1: import json
+    1: import math
+    1: from collections import defaultdict
+    1: from dataclasses import dataclass, field
+    1: from datetime import datetime, timezone
+    1: from pathlib import Path
+    1: from typing import Any, Dict, List, Mapping, MutableMapping, Optional
+       
+    1: from src.utils.config import get_section, load_config, resolve_path
+       
+       
+    3: @dataclass(frozen=True)
+    2: class EvaluationRules:
+    1:     cooperative_decisions: frozenset[str]
+    1:     betrayal_decisions: frozenset[str]
+    1:     resource_key: str = "stone"
+       
+    2:     @classmethod
+    2:     def default(cls) -> "EvaluationRules":
+   12:         return cls(
+   12:             cooperative_decisions=frozenset(
+    6:                 {"join", "cooperate", "contribute", "support", "assist"}
+                   ),
+    6:             betrayal_decisions=frozenset({"defect", "betray", "steal", "sabotage"}),
+    6:             resource_key="stone",
+               )
+       
+    2:     @classmethod
+    2:     def from_mapping(cls, data: Mapping[str, Any] | None) -> "EvaluationRules":
+    3:         if not data:
+    3:             return cls.default()
+>>>>>>         coop = data.get("cooperative_decisions")
+>>>>>>         betrayal = data.get("betrayal_decisions")
+>>>>>>         resource_key = str(data.get("resource_key", "stone"))
+>>>>>>         cooperative = (
+>>>>>>             frozenset(str(item).lower() for item in coop)
+>>>>>>             if isinstance(coop, (list, tuple, set, frozenset))
+>>>>>>             else cls.default().cooperative_decisions
+               )
+>>>>>>         betrayal_set = (
+>>>>>>             frozenset(str(item).lower() for item in betrayal)
+>>>>>>             if isinstance(betrayal, (list, tuple, set, frozenset))
+>>>>>>             else cls.default().betrayal_decisions
+               )
+>>>>>>         return cls(
+>>>>>>             cooperative_decisions=cooperative,
+>>>>>>             betrayal_decisions=betrayal_set,
+>>>>>>             resource_key=resource_key,
+               )
+       
+    1:     def to_json(self) -> Dict[str, Any]:
+    5:         return {
+    5:             "cooperative_decisions": sorted(self.cooperative_decisions),
+    5:             "betrayal_decisions": sorted(self.betrayal_decisions),
+    5:             "resource_key": self.resource_key,
+               }
+       
+       
+    3: @dataclass
+    2: class MetricsResult:
+    1:     cooperation_rate: float
+    1:     average_contribution: float
+    1:     average_recovery_time: Optional[float]
+    1:     gini_coefficient: float
+    1:     dialogue_entropy: float
+    1:     total_events: int
+    1:     total_turns: int
+    1:     contributions: Dict[str, float] = field(default_factory=dict)
+    1:     message_counts: Dict[str, int] = field(default_factory=dict)
+    1:     metadata: Dict[str, Any] = field(default_factory=dict)
+       
+    1:     def to_json(self) -> Dict[str, Any]:
+    3:         return {
+    3:             "cooperation_rate": self.cooperation_rate,
+    3:             "average_contribution": self.average_contribution,
+    3:             "average_recovery_time": self.average_recovery_time,
+    3:             "gini_coefficient": self.gini_coefficient,
+    3:             "dialogue_entropy": self.dialogue_entropy,
+    3:             "total_events": self.total_events,
+    3:             "total_turns": self.total_turns,
+    3:             "contributions": self.contributions,
+    3:             "message_counts": self.message_counts,
+    3:             "metadata": self.metadata,
+               }
+       
+       
+    2: class Evaluator:
+    1:     """Evaluate experiment logs and compute collaboration metrics."""
+       
+    1:     def __init__(self, rules: EvaluationRules | None = None) -> None:
+    6:         self.rules = rules or EvaluationRules.default()
+       
+    1:     def evaluate(self, log_path: Path) -> MetricsResult:
+    6:         entries = self._load_entries(log_path)
+    5:         return self._compute_metrics(entries, log_path)
+       
+    1:     def save(self, metrics: MetricsResult, out_path: Path) -> None:
+    3:         out_path.parent.mkdir(parents=True, exist_ok=True)
+    6:         out_path.write_text(
+    3:             json.dumps(metrics.to_json(), indent=2, ensure_ascii=False),
+    3:             encoding="utf-8",
+               )
+       
+    1:     def _load_entries(self, log_path: Path) -> List[Dict[str, Any]]:
+    6:         if not log_path.exists():
+    1:             raise FileNotFoundError(f"Log file not found: {log_path}")
+    5:         entries: List[Dict[str, Any]] = []
+   10:         with log_path.open("r", encoding="utf-8") as handle:
+   24:             for line in handle:
+   19:                 stripped = line.strip()
+   19:                 if not stripped:
+>>>>>>                     continue
+   19:                 entries.append(json.loads(stripped))
+    5:         return entries
+       
+    4:     def _compute_metrics(
+               self,
+    1:         entries: List[Dict[str, Any]],
+    1:         log_path: Path,
+    1:     ) -> MetricsResult:
+    5:         if not entries:
+>>>>>>             metadata = {
+>>>>>>                 "generated_at": self._now_iso(),
+>>>>>>                 "log_path": str(log_path),
+>>>>>>                 "agents": [],
+>>>>>>                 "turns": [],
+>>>>>>                 "rules": self.rules.to_json(),
+                   }
+>>>>>>             return MetricsResult(
+>>>>>>                 cooperation_rate=0.0,
+>>>>>>                 average_contribution=0.0,
+>>>>>>                 average_recovery_time=None,
+>>>>>>                 gini_coefficient=0.0,
+>>>>>>                 dialogue_entropy=0.0,
+>>>>>>                 total_events=0,
+>>>>>>                 total_turns=0,
+>>>>>>                 contributions={},
+>>>>>>                 message_counts={},
+>>>>>>                 metadata=metadata,
+                   )
+       
+    5:         cooperative = self.rules.cooperative_decisions
+    5:         betrayal = self.rules.betrayal_decisions
+    5:         resource_key = self.rules.resource_key
+       
+    5:         ordered_entries = entries
+    5:         previous_turn: Optional[int] = None
+   22:         for entry in entries:
+   18:             turn = int(entry.get("turn", 0))
+   18:             if previous_turn is not None and turn < previous_turn:
+    2:                 ordered_entries = sorted(
+    1:                     entries,
+    4:                     key=lambda item: (int(item.get("turn", 0)), str(item.get("agent", ""))),
+                       )
+    1:                 break
+   17:             previous_turn = turn
+       
+    5:         total_events = len(ordered_entries)
+    5:         turns: set[int] = set()
+    5:         agents: set[str] = set()
+       
+    5:         coop_count = 0
+    5:         contributions: Dict[str, float] = defaultdict(float)
+    5:         contribution_events = 0
+    5:         message_counts: Dict[str, int] = defaultdict(int)
+    5:         last_resources: Dict[str, float] = {}
+    5:         last_defection_turn: Dict[str, Optional[int]] = {}
+    5:         recovery_durations: List[int] = []
+       
+   24:         for entry in ordered_entries:
+   19:             agent = str(entry.get("agent", ""))
+   19:             agents.add(agent)
+   19:             decision = str(entry.get("decision", "")).lower()
+   19:             turn = int(entry.get("turn", 0))
+   19:             turns.add(turn)
+       
+   19:             contributions.setdefault(agent, 0.0)
+   19:             last_defection_turn.setdefault(agent, None)
+       
+   19:             if decision in cooperative:
+   14:                 coop_count += 1
+   14:                 if last_defection_turn.get(agent) is not None:
+>>>>>>                     diff = turn - last_defection_turn[agent]  # type: ignore[index]
+>>>>>>                     if diff > 0:
+>>>>>>                         recovery_durations.append(diff)
+>>>>>>                     last_defection_turn[agent] = None
+    5:             elif decision in betrayal:
+>>>>>>                 last_defection_turn[agent] = turn
+       
+   19:             resources = entry.get("resources", {})
+   19:             if isinstance(resources, Mapping) and resource_key in resources:
+   19:                 current_value = float(resources[resource_key])
+   19:                 if agent in last_resources:
+    9:                     delta = last_resources[agent] - current_value
+    9:                     if delta > 0:
+    9:                         contributions[agent] += delta
+    9:                         contribution_events += 1
+   19:                 last_resources[agent] = current_value
+       
+   19:             message_counts[agent] += 1
+       
+    5:         cooperation_rate = coop_count / total_events if total_events else 0.0
+    5:         average_contribution = (
+    5:             sum(contributions.values()) / contribution_events if contribution_events else 0.0
+               )
+    5:         gini = _gini(list(contributions.values()))
+    5:         entropy = _entropy(list(message_counts.values()))
+    5:         average_recovery_time = (
+    5:             sum(recovery_durations) / len(recovery_durations) if recovery_durations else None
+               )
+       
+    5:         metadata = {
+    5:             "generated_at": self._now_iso(),
+    5:             "log_path": str(log_path),
+    5:             "agents": sorted(agents),
+    5:             "turns": sorted(turns),
+    5:             "rules": self.rules.to_json(),
+               }
+       
+   10:         return MetricsResult(
+    5:             cooperation_rate=cooperation_rate,
+    5:             average_contribution=average_contribution,
+    5:             average_recovery_time=average_recovery_time,
+    5:             gini_coefficient=gini,
+    5:             dialogue_entropy=entropy,
+    5:             total_events=total_events,
+    5:             total_turns=len(turns),
+   15:             contributions={agent: round(contributions.get(agent, 0.0), 4) for agent in sorted(agents)},
+   15:             message_counts={agent: message_counts.get(agent, 0) for agent in sorted(agents)},
+    5:             metadata=metadata,
+               )
+       
+    2:     @staticmethod
+    2:     def _now_iso() -> str:
+    5:         return datetime.now(timezone.utc).isoformat()
+       
+       
+    1: def _gini(values: List[float]) -> float:
+   15:     filtered = [value for value in values if value >= 0]
+    5:     if not filtered:
+>>>>>>         return 0.0
+    5:     total = sum(filtered)
+    5:     if math.isclose(total, 0.0):
+>>>>>>         return 0.0
+    5:     sorted_values = sorted(filtered)
+    5:     n = len(sorted_values)
+    5:     cumulative = 0.0
+    5:     weighted_sum = 0.0
+   15:     for idx, value in enumerate(sorted_values, start=1):
+   10:         cumulative += value
+   10:         weighted_sum += idx * value
+    5:     return (2 * weighted_sum) / (n * total) - (n + 1) / n
+       
+       
+    1: def _entropy(counts: List[int]) -> float:
+   15:     filtered = [count for count in counts if count > 0]
+    5:     if len(filtered) <= 1:
+>>>>>>         return 0.0
+    5:     total = sum(filtered)
+    5:     entropy = 0.0
+   15:     for count in filtered:
+   10:         probability = count / total
+   10:         entropy -= probability * math.log2(probability)
+    5:     return entropy
+       
+       
+    1: def _load_rules_override(path: Optional[str]) -> Mapping[str, Any] | None:
+    3:     if not path:
+    3:         return None
+>>>>>>     rule_path = Path(path)
+>>>>>>     with rule_path.open("r", encoding="utf-8") as handle:
+>>>>>>         return json.load(handle)
+       
+       
+    1: def run_cli(argv: Optional[List[str]] = None) -> None:
+    3:     parser = argparse.ArgumentParser(description="Compute Village of Words metrics.")
+    3:     parser.add_argument("--config", required=True, help="Experiment config path (YAML or JSON).")
+    3:     parser.add_argument("--log", help="Override log file path.")
+    3:     parser.add_argument("--out", help="Override metrics output path.")
+    3:     parser.add_argument("--rules", help="JSON file overriding evaluation rules.")
+    3:     args = parser.parse_args(argv)
+       
+    3:     config_path = Path(args.config).resolve()
+    3:     raw_config = load_config(config_path)
+    3:     base_dir = Path(raw_config["base_dir"])
+       
+    3:     experiment = get_section(raw_config, "experiment")
+    3:     log_path = (
+    3:         Path(args.log)
+    3:         if args.log
+>>>>>>         else resolve_path(base_dir, experiment.get("log_path", "results/events.jsonl"))
+           )
+    3:     out_path = (
+    3:         Path(args.out)
+    3:         if args.out
+>>>>>>         else resolve_path(base_dir, experiment.get("metrics_path", "results/metrics.json"))
+           )
+    3:     out_path.parent.mkdir(parents=True, exist_ok=True)
+       
+    3:     evaluation_section = get_section(raw_config, "evaluation")
+    3:     rules_config: MutableMapping[str, Any] = dict(evaluation_section)
+    3:     override = _load_rules_override(args.rules)
+    3:     if override:
+>>>>>>         rules_config.update(override)
+       
+    3:     rules = EvaluationRules.from_mapping(rules_config)
+    3:     evaluator = Evaluator(rules)
+    3:     metrics = evaluator.evaluate(log_path)
+    3:     metadata = metrics.metadata
+    6:     metadata.update(
+    3:         {
+    3:             "config_path": str(config_path),
+    3:             "metrics_path": str(out_path),
+    3:             "experiment": experiment.get("name"),
+    3:             "seed": experiment.get("seed"),
+               }
+           )
+    3:     metrics.metadata = metadata
+    3:     evaluator.save(metrics, out_path)
+       
+    6:     print(  # noqa: T201 - CLI feedback
+    6:         json.dumps(
+    3:             {
+    3:                 "status": "ok",
+    3:                 "log": str(log_path),
+    3:                 "output": str(out_path),
+    3:                 "cooperation_rate": round(metrics.cooperation_rate, 4),
+                   },
+    3:             ensure_ascii=False,
+               )
+           )
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     run_cli()

@@ -1,0 +1,86 @@
+       
+    1: """Wrapper around LM Studio HTTP API for agent interactions."""
+    1: from __future__ import annotations
+       
+    1: import asyncio
+    1: import json
+    1: from dataclasses import dataclass
+    1: from typing import Any, Dict, Optional
+    1: from urllib import request
+    1: from urllib.error import URLError, HTTPError
+       
+       
+    3: @dataclass
+    2: class PromptPayload:
+    1:     system: str
+    1:     history: list[dict[str, str]]
+    1:     constraints: Optional[dict[str, Any]] = None
+       
+       
+    3: @dataclass
+    2: class AgentTurn:
+    1:     agent_id: str
+    1:     thought: str
+    1:     decision: str
+    1:     message: str
+    1:     raw_response: Dict[str, Any]
+       
+       
+    2: class LLMWrapper:
+    1:     """Async client for LM Studio endpoints with retry support."""
+       
+    1:     def __init__(self, base_url: str, api_key: str | None = None, timeout: float = 30.0, max_retries: int = 2):
+    6:         self.base_url = base_url.rstrip('/')
+    6:         self.api_key = api_key
+    6:         self.timeout = timeout
+    6:         self.max_retries = max_retries
+       
+    1:     async def chat(self, agent_id: str, payload: PromptPayload) -> AgentTurn:
+    2:         url = f"{self.base_url}/v1/chat/completions"
+    2:         headers = {"Content-Type": "application/json"}
+    2:         if self.api_key:
+>>>>>>             headers["Authorization"] = f"Bearer {self.api_key}"
+       
+    2:         body = {
+    2:             "agent_id": agent_id,
+    2:             "system": payload.system,
+    2:             "history": payload.history,
+    2:             "constraints": payload.constraints or {},
+               }
+       
+    2:         last_error: Exception | None = None
+    5:         for attempt in range(self.max_retries + 1):
+    4:             try:
+    4:                 data = await asyncio.to_thread(self._send_request, url, headers, body)
+    1:                 return self._parse_response(agent_id, data)
+    3:             except Exception as exc:  # noqa: BLE001 broad catch to log and retry
+    3:                 last_error = exc
+    3:                 await asyncio.sleep(3)
+       
+    1:         raise RuntimeError(f"LM Studio request failed after retries: {last_error}")
+       
+    1:     def _send_request(self, url: str, headers: Dict[str, str], body: Dict[str, Any]) -> Dict[str, Any]:
+>>>>>>         payload = json.dumps(body).encode("utf-8")
+>>>>>>         req = request.Request(url=url, data=payload, headers=headers, method="POST")
+>>>>>>         try:
+>>>>>>             with request.urlopen(req, timeout=self.timeout) as resp:
+>>>>>>                 content = resp.read().decode("utf-8")
+>>>>>>                 return json.loads(content)
+>>>>>>         except (HTTPError, URLError) as exc:  # pragma: no cover
+>>>>>>             raise RuntimeError(f"LM Studio request failed: {exc}") from exc
+       
+    1:     def _parse_response(self, agent_id: str, data: Dict[str, Any]) -> AgentTurn:
+    3:         output = data.get("output") or {}
+    3:         thought = output.get("thought") or output.get("THOUGHT") or ""
+    3:         decision = output.get("decision") or output.get("DECISION") or "UNKNOWN"
+    3:         message = output.get("message") or output.get("MESSAGE") or ""
+    6:         return AgentTurn(
+    3:             agent_id=agent_id,
+    3:             thought=thought,
+    3:             decision=decision,
+    3:             message=message,
+    3:             raw_response=data,
+               )
+       
+       
+    1: __all__ = ["PromptPayload", "AgentTurn", "LLMWrapper"]

@@ -1,0 +1,62 @@
+    1: import asyncio
+    1: import json
+    1: import tempfile
+    1: import unittest
+    1: from pathlib import Path
+       
+    1: from src.agents.agent_manager import AgentConfig, AgentManager
+    1: from src.agents.llm_wrapper import AgentTurn, LLMWrapper, PromptPayload
+    1: from src.simulator.turn_manager import PhaseConfig, TurnConfig, TurnManager
+       
+       
+    2: class DummyWrapper(LLMWrapper):
+    1:     def __init__(self):
+    1:         super().__init__(base_url="dummy")
+       
+    1:     async def chat(self, agent_id: str, payload: PromptPayload) -> AgentTurn:  # type: ignore[override]
+    2:         return AgentTurn(
+    1:             agent_id=agent_id,
+    1:             thought="Evaluate options",
+    1:             decision="Join",
+    1:             message="I will contribute",
+    1:             raw_response={"test": True},
+               )
+       
+       
+    2: class TurnManagerTests(unittest.TestCase):
+    1:     def test_step_writes_log(self) -> None:
+    1:         agent_cfgs = [
+    2:             AgentConfig(
+    1:                 agent_id="A",
+    1:                 name="Alex",
+    1:                 role="planner",
+    1:                 port=9001,
+    1:                 traits={},
+    1:                 resources={"stone": 2.0},
+                   )
+               ]
+    1:         agent_manager = AgentManager(agent_cfgs)
+    1:         wrapper = {"A": DummyWrapper()}
+       
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             log_path = Path(tmpdir) / "events.jsonl"
+    2:             turn_config = TurnConfig(
+    1:                 seed=7,
+    1:                 max_turns=1,
+    1:                 log_path=log_path,
+    1:                 phases=[PhaseConfig(name="formation", start=1, end=3)],
+                   )
+    1:             manager = TurnManager(agent_manager, wrapper, turn_config)
+    1:             asyncio.run(manager.run())
+       
+    1:             self.assertTrue(log_path.exists())
+    1:             content = log_path.read_text(encoding="utf-8").strip().splitlines()
+    1:             self.assertEqual(len(content), 1)
+    1:             entry = json.loads(content[0])
+    1:             self.assertEqual(entry["turn"], 1)
+    1:             self.assertEqual(entry["agent"], "A")
+    1:             self.assertEqual(entry["decision"], "Join")
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     unittest.main()

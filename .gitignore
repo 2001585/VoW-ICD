@@ -1,0 +1,22 @@
+# OS/IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.ipynb_checkpoints/
+
+# Node
+node_modules/
+
+# Data & Results
+data/
+results/
+
+# Experiment locks/logs
+experiments/*/requirements.lock
+*.log

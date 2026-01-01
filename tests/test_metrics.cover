@@ -1,0 +1,129 @@
+    1: """Tests for metrics computation pipeline."""
+    1: from __future__ import annotations
+       
+    1: import io
+    1: import json
+    1: import unittest
+    1: from contextlib import redirect_stdout
+    1: from pathlib import Path
+    1: import tempfile
+       
+    1: from src.metrics import Evaluator, EvaluationRules, run_cli
+       
+       
+    2: class EvaluatorTest(unittest.TestCase):
+    1:     def setUp(self) -> None:
+    3:         self.log_path = Path("results/vow-baseline/events.sample.jsonl").resolve()
+    3:         if not self.log_path.exists():
+>>>>>>             self.skipTest("Sample log not found; skipping metrics tests.")
+       
+    1:     def test_evaluator_computes_expected_metrics(self) -> None:
+    1:         evaluator = Evaluator(EvaluationRules.default())
+    1:         result = evaluator.evaluate(self.log_path)
+       
+    1:         self.assertEqual(result.total_events, 4)
+    1:         self.assertEqual(result.total_turns, 2)
+    1:         self.assertAlmostEqual(result.cooperation_rate, 0.75, places=3)
+    1:         self.assertAlmostEqual(result.average_contribution, 1.0, places=3)
+    1:         self.assertIsNone(result.average_recovery_time)
+    1:         self.assertAlmostEqual(result.gini_coefficient, 0.0, places=3)
+    1:         self.assertAlmostEqual(result.dialogue_entropy, 1.0, places=3)
+    1:         self.assertEqual(result.contributions["A"], 1.0)
+    1:         self.assertEqual(result.contributions["B"], 1.0)
+    1:         self.assertEqual(result.message_counts["A"], 2)
+    1:         self.assertEqual(result.message_counts["B"], 2)
+    1:         self.assertEqual(result.metadata["agents"], ["A", "B"])
+       
+    1:     def test_evaluator_missing_log_raises(self) -> None:
+    1:         evaluator = Evaluator(EvaluationRules.default())
+    2:         with self.assertRaises(FileNotFoundError):
+    1:             evaluator.evaluate(Path("results/vow-baseline/nonexistent.jsonl"))
+       
+    1:     def test_evaluator_handles_unsorted_entries(self) -> None:
+    1:         evaluator = Evaluator(EvaluationRules.default())
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             log_path = Path(tmpdir) / "events.jsonl"
+    1:             entries = [
+    1:                 {
+    1:                     "turn": 2,
+    1:                     "phase": "autonomy",
+    1:                     "agent": "A",
+    1:                     "thought": "Later turn",
+    1:                     "decision": "Join",
+    1:                     "message": "Contributing",
+    1:                     "resources": {"stone": 1.0},
+                       },
+    1:                 {
+    1:                     "turn": 1,
+    1:                     "phase": "formation",
+    1:                     "agent": "A",
+    1:                     "thought": "First entry",
+    1:                     "decision": "Join",
+    1:                     "message": "Starting",
+    1:                     "resources": {"stone": 2.0},
+                       },
+    1:                 {
+    1:                     "turn": 1,
+    1:                     "phase": "formation",
+    1:                     "agent": "B",
+    1:                     "thought": "Observer",
+    1:                     "decision": "Observe",
+    1:                     "message": "Wait",
+    1:                     "resources": {"stone": 3.0},
+                       },
+                   ]
+    2:             log_path.write_text(
+    5:                 "\n".join(json.dumps(entry) for entry in entries),
+    1:                 encoding="utf-8",
+                   )
+    1:             result = evaluator.evaluate(log_path)
+    1:             self.assertEqual(result.total_turns, 2)
+    1:             self.assertAlmostEqual(result.contributions["A"], 1.0, places=3)
+    1:             self.assertEqual(result.contributions["B"], 0.0)
+       
+       
+    2: class MetricsCLITest(unittest.TestCase):
+    1:     def setUp(self) -> None:
+    1:         self.log_path = Path("results/vow-baseline/events.sample.jsonl").resolve()
+    1:         if not self.log_path.exists():
+>>>>>>             self.skipTest("Sample log not found; skipping CLI test.")
+       
+    1:     def test_cli_writes_metrics_file(self) -> None:
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             config_path = Path(tmpdir) / "config.json"
+    2:             config_path.write_text(
+    2:                 json.dumps(
+    1:                     {
+    2:                         "experiment": {
+    1:                             "name": "metrics-test",
+    1:                             "seed": 42,
+    1:                             "log_path": str(self.log_path),
+    1:                             "metrics_path": str(Path(tmpdir) / "metrics.json"),
+                               }
+                           }
+                       ),
+    1:                 encoding="utf-8",
+                   )
+    1:             out_path = Path(tmpdir) / "metrics.json"
+    1:             stdout = io.StringIO()
+    2:             with redirect_stdout(stdout):
+    2:                 run_cli(
+    1:                     [
+    1:                         "--config",
+    1:                         str(config_path),
+    1:                         "--log",
+    1:                         str(self.log_path),
+    1:                         "--out",
+    1:                         str(out_path),
+                           ]
+                       )
+    1:             data = json.loads(out_path.read_text(encoding="utf-8"))
+    1:             self.assertIn("cooperation_rate", data)
+    1:             self.assertAlmostEqual(data["cooperation_rate"], 0.75, places=3)
+    1:             payload = json.loads(stdout.getvalue())
+    1:             self.assertEqual(payload["status"], "ok")
+    1:             self.assertEqual(Path(payload["output"]).resolve(), out_path.resolve())
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     unittest.main()

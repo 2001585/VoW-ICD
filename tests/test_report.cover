@@ -1,0 +1,103 @@
+    1: """Tests for report generation pipeline."""
+    1: from __future__ import annotations
+       
+    1: import io
+    1: import json
+    1: import unittest
+    1: from contextlib import redirect_stdout
+    1: from pathlib import Path
+    1: import tempfile
+       
+    1: from src.metrics import run_cli as metrics_cli
+    1: from src.report import ReportGenerator, run_cli as report_cli
+       
+       
+    2: class ReportGeneratorTest(unittest.TestCase):
+    1:     def setUp(self) -> None:
+    2:         self.sample_log = Path("results/vow-baseline/events.sample.jsonl").resolve()
+    2:         if not self.sample_log.exists():
+>>>>>>             self.skipTest("Sample log missing.")
+       
+    1:     def _build_config(self, base_dir: Path) -> Path:
+    2:         config_path = base_dir / "config.json"
+    4:         config_path.write_text(
+    4:             json.dumps(
+    2:                 {
+    4:                     "experiment": {
+    2:                         "name": "report-test",
+    2:                         "seed": 42,
+    2:                         "log_path": str(self.sample_log),
+    2:                         "metrics_path": str(base_dir / "metrics.json"),
+    2:                         "summary_path": str(base_dir / "SUMMARY.md"),
+                           }
+                       }
+                   ),
+    2:             encoding="utf-8",
+               )
+    2:         return config_path
+       
+    1:     def _build_metrics(self, config_path: Path, destination: Path) -> Path:
+    2:         stdout = io.StringIO()
+    4:         with redirect_stdout(stdout):
+    4:             metrics_cli(
+    2:                 [
+    2:                     "--config",
+    2:                     str(config_path),
+    2:                     "--log",
+    2:                     str(self.sample_log),
+    2:                     "--out",
+    2:                     str(destination),
+                       ]
+                   )
+    2:         return destination
+       
+    1:     def test_report_generator_outputs_sections(self) -> None:
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             metrics_path = Path(tmpdir) / "metrics.json"
+    1:             config_path = self._build_config(Path(tmpdir))
+    1:             self._build_metrics(config_path, metrics_path)
+    1:             metrics_payload = json.loads(metrics_path.read_text(encoding="utf-8"))
+       
+    1:             generator = ReportGenerator()
+    1:             markdown = generator.render_markdown(metrics_payload)
+    1:             self.assertIn("## Key Metrics", markdown)
+    1:             self.assertIn("Cooperation rate", markdown)
+       
+    1:             json_payload = generator.render_json(metrics_payload)
+    1:             self.assertIn("summary", json_payload)
+    1:             self.assertIn("cooperation_rate", json_payload["summary"])
+       
+    1:     def test_report_cli_produces_markdown_and_json(self) -> None:
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             metrics_path = Path(tmpdir) / "metrics.json"
+    1:             config_path = self._build_config(Path(tmpdir))
+    1:             self._build_metrics(config_path, metrics_path)
+    1:             summary_path = Path(tmpdir) / "SUMMARY.md"
+       
+    1:             stdout = io.StringIO()
+    2:             with redirect_stdout(stdout):
+    2:                 report_cli(
+    1:                     [
+    1:                         "--config",
+    1:                         str(config_path),
+    1:                         "--metrics",
+    1:                         str(metrics_path),
+    1:                         "--out",
+    1:                         str(summary_path),
+    1:                         "--format",
+    1:                         "md",
+                           ]
+                       )
+       
+    1:             summary_text = summary_path.read_text(encoding="utf-8")
+    1:             self.assertIn("Village of Words Summary", summary_text)
+    1:             report_json = summary_path.with_name("report.json")
+    1:             payload = json.loads(report_json.read_text(encoding="utf-8"))
+    1:             self.assertAlmostEqual(payload["summary"]["cooperation_rate"], 0.75, places=3)
+    1:             cli_output = json.loads(stdout.getvalue())
+    1:             self.assertEqual(cli_output["status"], "ok")
+    1:             self.assertEqual(cli_output["format"], "md")
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     unittest.main()

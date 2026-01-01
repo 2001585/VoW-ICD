@@ -1,0 +1,68 @@
+
+experiment:
+  name: vow-baseline
+  seed: 42
+  max_turns: 10
+  log_path: results/vow-baseline/events.jsonl
+  metrics_path: results/vow-baseline/metrics.json
+  summary_path: results/vow-baseline/SUMMARY.md
+
+agents:
+  - agent_id: A
+    name: Alex
+    role: planner
+    port: 9001
+    traits:
+      temperament: calm
+      motivation: communal
+    resources:
+      stone: 3.0
+      wood: 2.0
+  - agent_id: B
+    name: Bailey
+    role: supplier
+    port: 9002
+    traits:
+      temperament: opportunist
+      motivation: mixed
+    resources:
+      stone: 3.0
+      wood: 1.0
+  - agent_id: C
+    name: Casey
+    role: coordinator
+    port: 9003
+    traits:
+      temperament: diplomatic
+      motivation: harmony
+    resources:
+      stone: 2.0
+      wood: 2.0
+  - agent_id: D
+    name: Drew
+    role: analyst
+    port: 9004
+    traits:
+      temperament: cautious
+      motivation: fairness
+    resources:
+      stone: 2.0
+      wood: 3.0
+
+scenario:
+  phases:
+    - name: formation
+      turns: [1, 3]
+      constraints:
+        enforce_cooperation: true
+    - name: autonomy
+      turns: [4, 6]
+    - name: shock
+      turns: [7, 7]
+      event: resource_drop
+      parameters:
+        target: "all"
+        delta:
+          stone: -1.0
+    - name: recovery
+      turns: [8, 10]

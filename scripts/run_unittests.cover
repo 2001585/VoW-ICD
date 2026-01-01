@@ -1,0 +1,25 @@
+    1: """Utility runner for unittest discovery (used by trace/coverage tools)."""
+    1: from __future__ import annotations
+       
+    1: import sys
+    1: import unittest
+    1: from pathlib import Path
+       
+       
+    1: def _ensure_repo_on_path() -> None:
+    1:     root = Path(__file__).resolve().parents[1]
+    1:     if str(root) not in sys.path:
+    1:         sys.path.insert(0, str(root))
+       
+       
+    1: def main() -> None:
+    1:     _ensure_repo_on_path()
+    1:     suite = unittest.defaultTestLoader.discover("tests")
+    1:     runner = unittest.TextTestRunner(verbosity=2)
+    1:     result = runner.run(suite)
+    1:     if not result.wasSuccessful():
+>>>>>>         raise SystemExit(1)
+       
+       
+    1: if __name__ == "__main__":
+    1:     main()

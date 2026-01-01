@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="300" viewBox="0 0 1100 300">
+  <defs>
+    <style type="text/css">
+      <![CDATA[
+        .h { font-family: Arial, Helvetica, sans-serif; font-size: 18px; font-weight: bold; }
+        .c { font-family: Arial, Helvetica, sans-serif; font-size: 16px; }
+        .small { font-size: 14px; }
+        .grid { stroke: #000; stroke-width: 1; fill: #fff; }
+        .head { fill: #e9e9e9; }
+      ]]>
+    </style>
+  </defs>
+
+  <!-- Table grid (7 columns) -->
+  <!-- Column widths: 150, 170, 130, 170, 180, 140, 160 = total 1100 -->
+  <!-- Header row -->
+  <rect x="0" y="0" width="150" height="50" class="grid head"/>
+  <rect x="150" y="0" width="170" height="50" class="grid head"/>
+  <rect x="320" y="0" width="130" height="50" class="grid head"/>
+  <rect x="450" y="0" width="170" height="50" class="grid head"/>
+  <rect x="620" y="0" width="180" height="50" class="grid head"/>
+  <rect x="800" y="0" width="140" height="50" class="grid head"/>
+  <rect x="940" y="0" width="160" height="50" class="grid head"/>
+
+  <text x="75" y="30" text-anchor="middle" class="h">Variant</text>
+  <text x="235" y="30" text-anchor="middle" class="h">Intensity (Δresource)</text>
+  <text x="385" y="30" text-anchor="middle" class="h">Duration</text>
+  <text x="535" y="30" text-anchor="middle" class="h">Injection (turn)</text>
+  <text x="710" y="30" text-anchor="middle" class="h">Target</text>
+  <text x="870" y="30" text-anchor="middle" class="h">Alignment</text>
+  <text x="1020" y="30" text-anchor="middle" class="h">Notes</text>
+
+  <!-- Row 1: Soft -->
+  <rect x="0" y="50" width="150" height="50" class="grid"/>
+  <rect x="150" y="50" width="170" height="50" class="grid"/>
+  <rect x="320" y="50" width="130" height="50" class="grid"/>
+  <rect x="450" y="50" width="170" height="50" class="grid"/>
+  <rect x="620" y="50" width="180" height="50" class="grid"/>
+  <rect x="800" y="50" width="140" height="50" class="grid"/>
+  <rect x="940" y="50" width="160" height="50" class="grid"/>
+
+  <text x="75" y="80" text-anchor="middle" class="c">Soft</text>
+  <text x="235" y="80" text-anchor="middle" class="c">stone −2</text>
+  <text x="385" y="80" text-anchor="middle" class="c">1</text>
+  <text x="535" y="80" text-anchor="middle" class="c">9</text>
+  <text x="710" y="80" text-anchor="middle" class="c">all except agent D</text>
+  <text x="870" y="80" text-anchor="middle" class="c">off</text>
+  <text x="1020" y="80" text-anchor="middle" class="c">—</text>
+
+  <!-- Row 2: Baseline -->
+  <rect x="0" y="100" width="150" height="50" class="grid"/>
+  <rect x="150" y="100" width="170" height="50" class="grid"/>
+  <rect x="320" y="100" width="130" height="50" class="grid"/>
+  <rect x="450" y="100" width="170" height="50" class="grid"/>
+  <rect x="620" y="100" width="180" height="50" class="grid"/>
+  <rect x="800" y="100" width="140" height="50" class="grid"/>
+  <rect x="940" y="100" width="160" height="50" class="grid"/>
+
+  <text x="75" y="130" text-anchor="middle" class="c">Baseline (single)</text>
+  <text x="235" y="130" text-anchor="middle" class="c">stone −3</text>
+  <text x="385" y="130" text-anchor="middle" class="c">1</text>
+  <text x="535" y="130" text-anchor="middle" class="c">9</text>
+  <text x="710" y="130" text-anchor="middle" class="c">all except agent D</text>
+  <text x="870" y="130" text-anchor="middle" class="c">off</text>
+  <text x="1020" y="130" text-anchor="middle" class="c">—</text>
+
+  <!-- Row 3: Double -->
+  <rect x="0" y="150" width="150" height="50" class="grid"/>
+  <rect x="150" y="150" width="170" height="50" class="grid"/>
+  <rect x="320" y="150" width="130" height="50" class="grid"/>
+  <rect x="450" y="150" width="170" height="50" class="grid"/>
+  <rect x="620" y="150" width="180" height="50" class="grid"/>
+  <rect x="800" y="150" width="140" height="50" class="grid"/>
+  <rect x="940" y="150" width="160" height="50" class="grid"/>
+
+  <text x="75" y="180" text-anchor="middle" class="c">Double (two waves)</text>
+  <text x="235" y="180" text-anchor="middle" class="c">stone −4</text>
+  <text x="385" y="180" text-anchor="middle" class="c">1 × 2</text>
+  <text x="535" y="180" text-anchor="middle" class="c">9 and 12</text>
+  <text x="710" y="180" text-anchor="middle" class="c">all except agent D</text>
+  <text x="870" y="180" text-anchor="middle" class="c">off</text>
+  <text x="1020" y="180" text-anchor="middle" class="small">window spacing ≈ 3</text>
+
+  <!-- Row 4: Extended -->
+  <rect x="0" y="200" width="150" height="50" class="grid"/>
+  <rect x="150" y="200" width="170" height="50" class="grid"/>
+  <rect x="320" y="200" width="130" height="50" class="grid"/>
+  <rect x="450" y="200" width="170" height="50" class="grid"/>
+  <rect x="620" y="200" width="180" height="50" class="grid"/>
+  <rect x="800" y="200" width="140" height="50" class="grid"/>
+  <rect x="940" y="200" width="160" height="50" class="grid"/>
+
+  <text x="75" y="230" text-anchor="middle" class="c">Extended (continuous)</text>
+  <text x="235" y="230" text-anchor="middle" class="c">stone −3</text>
+  <text x="385" y="230" text-anchor="middle" class="c">3</text>
+  <text x="535" y="230" text-anchor="middle" class="c">9–11</text>
+  <text x="710" y="230" text-anchor="middle" class="c">all except agent D</text>
+  <text x="870" y="230" text-anchor="middle" class="c">on</text>
+  <text x="1020" y="230" text-anchor="middle" class="c">continuous window</text>
+
+</svg>

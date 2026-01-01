@@ -1,0 +1,35 @@
+       
+    1: import unittest
+       
+    1: from src.agents.agent_manager import AgentConfig, AgentManager
+       
+       
+    2: class AgentManagerTests(unittest.TestCase):
+    1:     def setUp(self):
+    1:         self.configs = [
+    2:             AgentConfig(
+    1:                 agent_id="A",
+    1:                 name="Alex",
+    1:                 role="worker",
+    1:                 port=9001,
+    1:                 traits={"temper": "calm"},
+    1:                 resources={"stone": 3.0},
+                   )
+               ]
+    1:         self.manager = AgentManager(self.configs)
+       
+    1:     def test_snapshot_and_update(self):
+    2:         self.manager.update_state(
+    1:             "A",
+    1:             memory_append="Turn1",
+    1:             resources_delta={"stone": -1.0},
+    1:             decision="Join",
+               )
+    1:         snap = self.manager.snapshot()
+    1:         self.assertEqual(snap["A"].memory, ["Turn1"])
+    1:         self.assertEqual(snap["A"].resources["stone"], 2.0)
+    1:         self.assertEqual(snap["A"].last_decision, "Join")
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     unittest.main()

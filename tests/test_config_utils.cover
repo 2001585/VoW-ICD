@@ -1,0 +1,52 @@
+    1: """Tests for shared configuration utilities."""
+    1: from __future__ import annotations
+       
+    1: import json
+    1: import tempfile
+    1: import unittest
+    1: from pathlib import Path
+       
+    1: from src.utils.config import get_section, load_config, resolve_path
+       
+    1: try:
+    1:     import yaml  # type: ignore
+       
+    1:     HAS_YAML = True
+>>>>>> except ImportError:  # pragma: no cover - optional dependency
+>>>>>>     HAS_YAML = False
+       
+       
+    2: class ConfigUtilsTest(unittest.TestCase):
+    1:     def test_load_config_json_includes_base_dir(self) -> None:
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             config_path = Path(tmpdir) / "config.json"
+    2:             config_path.write_text(
+    1:                 json.dumps({"experiment": {"name": "test-exp"}}), encoding="utf-8"
+                   )
+    1:             data = load_config(config_path)
+    1:             self.assertEqual(Path(tmpdir), data["base_dir"])
+    1:             experiment = get_section(data, "experiment")
+    1:             self.assertEqual("test-exp", experiment["name"])
+       
+    1:     def test_resolve_path_relative(self) -> None:
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             base = Path(tmpdir)
+    1:             resolved = resolve_path(base, "results/output.json")
+    1:             self.assertTrue(str(resolved).startswith(str(base.resolve())))
+    1:             absolute = resolve_path(base, Path("/tmp/absolute.json"))
+    1:             self.assertEqual(Path("/tmp/absolute.json"), absolute)
+       
+    2:     @unittest.skipUnless(HAS_YAML, "PyYAML not installed")
+    2:     def test_load_config_yaml(self) -> None:
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             config_path = Path(tmpdir) / "config.yaml"
+    2:             config_path.write_text(
+    1:                 yaml.safe_dump({"experiment": {"name": "yaml-exp"}}), encoding="utf-8"
+                   )
+    1:             data = load_config(config_path)
+    1:             experiment = get_section(data, "experiment")
+    1:             self.assertEqual("yaml-exp", experiment["name"])
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     unittest.main()

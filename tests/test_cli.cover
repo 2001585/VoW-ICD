@@ -1,0 +1,53 @@
+    1: import json
+    1: import tempfile
+    1: import unittest
+    1: from pathlib import Path
+       
+    1: from src.run import main
+       
+       
+    2: class CLITests(unittest.TestCase):
+    1:     def test_dry_run_creates_log(self) -> None:
+    2:         with tempfile.TemporaryDirectory() as tmpdir:
+    1:             base = Path(tmpdir)
+    1:             config = {
+    1:                 "experiment": {
+    1:                     "name": "test",
+    1:                     "seed": 3,
+    1:                     "max_turns": 1,
+    1:                     "log_path": "events.jsonl",
+    1:                     "metrics_path": "metrics.json",
+                       },
+    1:                 "agents": [
+    1:                     {
+    1:                         "agent_id": "A",
+    1:                         "name": "Alex",
+    1:                         "role": "planner",
+    1:                         "port": 9101,
+    1:                         "traits": {},
+    1:                         "resources": {"stone": 2},
+                           }
+                       ],
+    1:                 "scenario": {
+    2:                     "phases": [
+    1:                         {"name": "formation", "turns": [1, 1]},
+                           ]
+                       },
+                   }
+    1:             config_path = base / "config.json"
+    1:             config_path.write_text(json.dumps(config), encoding="utf-8")
+       
+    2:             main([
+    1:                 "--config",
+    1:                 str(config_path),
+    1:                 "--dry-run",
+                   ])
+       
+    1:             log_path = base / "events.jsonl"
+    1:             self.assertTrue(log_path.exists())
+    1:             data = log_path.read_text(encoding="utf-8").strip()
+    1:             self.assertTrue(data)
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     unittest.main()

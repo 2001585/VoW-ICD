@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="360" viewBox="0 0 1000 360">
+<rect x="40" y="40" width="440" height="280" fill="#fff" stroke="#000" stroke-width="1"/>
+<text x="260.0" y="30" text-anchor="middle" font-family="Arial" font-size="18">Cooperation Rate (mean±SD)</text>
+<rect x="100" y="148.02760022699948" width="40" height="171.97239977300052" fill="#d9d9d9" stroke="#000"/>
+<line x1="120.0" y1="87.72072614334289" x2="120.0" y2="208.33447431065605" stroke="#000" stroke-width="2"/>
+<line x1="112.0" y1="87.72072614334289" x2="128.0" y2="87.72072614334289" stroke="#000" stroke-width="2"/>
+<line x1="112.0" y1="208.33447431065605" x2="128.0" y2="208.33447431065605" stroke="#000" stroke-width="2"/>
+<text x="120.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Soft</text>
+<text x="120.0" y="140.02760022699948" text-anchor="middle" font-family="Arial" font-size="12">0.703</text>
+<rect x="175" y="140.3929049337843" width="40" height="179.6070950662157" fill="#d9d9d9" stroke="#000"/>
+<line x1="195.0" y1="112.10494730118793" x2="195.0" y2="168.68086256638065" stroke="#000" stroke-width="2"/>
+<line x1="187.0" y1="112.10494730118793" x2="203.0" y2="112.10494730118793" stroke="#000" stroke-width="2"/>
+<line x1="187.0" y1="168.68086256638065" x2="203.0" y2="168.68086256638065" stroke="#000" stroke-width="2"/>
+<text x="195.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Baseline</text>
+<text x="195.0" y="132.3929049337843" text-anchor="middle" font-family="Arial" font-size="12">0.709</text>
+<rect x="250" y="243.8854411307012" width="40" height="76.1145588692988" fill="#d9d9d9" stroke="#000"/>
+<line x1="270.0" y1="205.77800063036034" x2="270.0" y2="281.99288163104205" stroke="#000" stroke-width="2"/>
+<line x1="262.0" y1="205.77800063036034" x2="278.0" y2="205.77800063036034" stroke="#000" stroke-width="2"/>
+<line x1="262.0" y1="281.99288163104205" x2="278.0" y2="281.99288163104205" stroke="#000" stroke-width="2"/>
+<text x="270.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Double</text>
+<text x="270.0" y="235.8854411307012" text-anchor="middle" font-family="Arial" font-size="12">0.627</text>
+<rect x="325" y="131.06161068652133" width="40" height="188.93838931347867" fill="#d9d9d9" stroke="#000"/>
+<line x1="345.0" y1="123.56963256241522" x2="345.0" y2="138.55358881062745" stroke="#000" stroke-width="2"/>
+<line x1="337.0" y1="123.56963256241522" x2="353.0" y2="123.56963256241522" stroke="#000" stroke-width="2"/>
+<line x1="337.0" y1="138.55358881062745" x2="353.0" y2="138.55358881062745" stroke="#000" stroke-width="2"/>
+<text x="345.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Extended</text>
+<text x="345.0" y="123.06161068652133" text-anchor="middle" font-family="Arial" font-size="12">0.716</text>
+<rect x="520" y="40" width="440" height="280" fill="#fff" stroke="#000" stroke-width="1"/>
+<text x="740.0" y="30" text-anchor="middle" font-family="Arial" font-size="18">Average Recovery Time (mean±SD)</text>
+<rect x="580" y="299.0900536390567" width="40" height="20.909946360943316" fill="#d9d9d9" stroke="#000"/>
+<line x1="600.0" y1="283.2922763862823" x2="600.0" y2="314.8878308918311" stroke="#000" stroke-width="2"/>
+<line x1="592.0" y1="283.2922763862823" x2="608.0" y2="283.2922763862823" stroke="#000" stroke-width="2"/>
+<line x1="592.0" y1="314.8878308918311" x2="608.0" y2="314.8878308918311" stroke="#000" stroke-width="2"/>
+<text x="600.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Soft</text>
+<text x="600.0" y="291.0900536390567" text-anchor="middle" font-family="Arial" font-size="12">1.46 turns</text>
+<rect x="655" y="277.15021946512167" width="40" height="42.84978053487834" fill="#d9d9d9" stroke="#000"/>
+<line x1="675.0" y1="249.11034455776783" x2="675.0" y2="305.1900943724755" stroke="#000" stroke-width="2"/>
+<line x1="667.0" y1="249.11034455776783" x2="683.0" y2="249.11034455776783" stroke="#000" stroke-width="2"/>
+<line x1="667.0" y1="305.1900943724755" x2="683.0" y2="305.1900943724755" stroke="#000" stroke-width="2"/>
+<text x="675.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Baseline</text>
+<text x="675.0" y="269.15021946512167" text-anchor="middle" font-family="Arial" font-size="12">1.73 turns</text>
+<rect x="730" y="178.40479381447264" width="40" height="141.59520618552736" fill="#d9d9d9" stroke="#000"/>
+<line x1="750.0" y1="57.958629193105196" x2="750.0" y2="298.85095843584" stroke="#000" stroke-width="2"/>
+<line x1="742.0" y1="57.958629193105196" x2="758.0" y2="57.958629193105196" stroke="#000" stroke-width="2"/>
+<line x1="742.0" y1="298.85095843584" x2="758.0" y2="298.85095843584" stroke="#000" stroke-width="2"/>
+<text x="750.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Double</text>
+<text x="750.0" y="170.40479381447264" text-anchor="middle" font-family="Arial" font-size="12">2.95 turns</text>
+<rect x="805" y="260.7708125517306" width="40" height="59.229187448269364" fill="#d9d9d9" stroke="#000"/>
+<line x1="825.0" y1="226.48478430276845" x2="825.0" y2="295.05684080069284" stroke="#000" stroke-width="2"/>
+<line x1="817.0" y1="226.48478430276845" x2="833.0" y2="226.48478430276845" stroke="#000" stroke-width="2"/>
+<line x1="817.0" y1="295.05684080069284" x2="833.0" y2="295.05684080069284" stroke="#000" stroke-width="2"/>
+<text x="825.0" y="338" text-anchor="middle" font-family="Arial" font-size="14">Extended</text>
+<text x="825.0" y="252.77081255173061" text-anchor="middle" font-family="Arial" font-size="12">1.93 turns</text>
+</svg>

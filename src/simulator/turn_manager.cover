@@ -1,0 +1,213 @@
+    1: """Turn manager orchestrates multi-agent turns and logging."""
+    1: from __future__ import annotations
+       
+    1: import asyncio
+    1: import json
+    1: import random
+    1: from dataclasses import dataclass, field
+    1: from pathlib import Path
+    1: from typing import Any, Dict, List, Optional, TextIO
+       
+    1: from src.agents.agent_manager import AgentManager
+    1: from src.agents.llm_wrapper import AgentTurn, LLMWrapper, PromptPayload
+       
+       
+    3: @dataclass
+    2: class PhaseConfig:
+    1:     name: str
+    1:     start: int
+    1:     end: int
+    1:     event: Optional[str] = None
+    1:     parameters: Dict[str, Any] = field(default_factory=dict)
+    1:     constraints: Dict[str, Any] = field(default_factory=dict)
+       
+    1:     def includes(self, turn: int) -> bool:
+    2:         return self.start <= turn <= self.end
+       
+       
+    3: @dataclass
+    2: class TurnConfig:
+    1:     seed: int
+    1:     max_turns: int
+    1:     log_path: Path
+    1:     phases: List[PhaseConfig]
+       
+       
+    3: @dataclass
+    2: class TurnResult:
+    1:     turn: int
+    1:     phase: Optional[str]
+    1:     events: List[str]
+    1:     agent_turns: List[AgentTurn]
+       
+       
+    2: class TurnManager:
+    1:     """Run experiment turns, call LLM wrappers, and persist JSONL logs."""
+       
+    5:     def __init__(
+               self,
+    1:         agent_manager: AgentManager,
+    1:         wrappers: Dict[str, LLMWrapper],
+    1:         config: TurnConfig,
+    1:     ) -> None:
+    2:         self.agent_manager = agent_manager
+    2:         self.wrappers = wrappers
+    2:         self.config = config
+    2:         self.log_path = config.log_path
+    2:         self.log_path.parent.mkdir(parents=True, exist_ok=True)
+    4:         self.history: Dict[str, List[Dict[str, str]]] = {
+    4:             agent_id: [] for agent_id in wrappers
+               }
+    2:         self._applied_events: set[tuple[str, int]] = set()
+    2:         self._log_handle: Optional[TextIO] = None
+       
+    1:     async def run(self) -> List[TurnResult]:
+    2:         self._set_seed(self.config.seed)
+    2:         results: List[TurnResult] = []
+    4:         with self.log_path.open("a", encoding="utf-8") as handle:
+    2:             self._log_handle = handle
+    2:             try:
+    4:                 for turn in range(1, self.config.max_turns + 1):
+    2:                     result = await self.step(turn)
+    2:                     results.append(result)
+                   finally:
+    2:                 handle.flush()
+    2:                 self._log_handle = None
+    2:         return results
+       
+    1:     async def step(self, turn: int) -> TurnResult:
+    2:         phase = self._phase_for_turn(turn)
+    2:         events_applied = self._apply_phase_event(phase, turn)
+       
+    2:         agent_turns: List[AgentTurn] = []
+    4:         for agent_id, wrapper in self.wrappers.items():
+    2:             state = self.agent_manager.get_agent(agent_id)
+    4:             payload = PromptPayload(
+                       system=(
+    4:                     f"You are {state.config.name} ({state.config.role}). "
+    2:                     f"Current phase: {phase.name if phase else 'free'}. "
+                           "Respond with THOUGHT, DECISION, MESSAGE fields."
+                       ),
+    2:                 history=self.history[agent_id],
+    2:                 constraints=phase.constraints if phase else {},
+                   )
+       
+    2:             try:
+    2:                 turn_result = await wrapper.chat(agent_id, payload)
+>>>>>>             except Exception as exc:  # pragma: no cover - drastic failure path
+>>>>>>                 turn_result = AgentTurn(
+>>>>>>                     agent_id=agent_id,
+>>>>>>                     thought="",
+>>>>>>                     decision="ERROR",
+>>>>>>                     message=f"Wrapper failure: {exc}",
+>>>>>>                     raw_response={"error": str(exc)},
+                       )
+       
+    2:             self._update_state_from_turn(agent_id, turn, turn_result)
+    2:             updated_state = self.agent_manager.get_agent(agent_id)
+    2:             self._append_history(agent_id, turn, turn_result)
+    4:             self._write_log_entry(
+    2:                 turn,
+    2:                 phase,
+    2:                 turn_result,
+    2:                 resources=dict(updated_state.resources),
+                   )
+    2:             agent_turns.append(turn_result)
+       
+    2:         if self._log_handle:
+    2:             self._log_handle.flush()
+       
+    4:         return TurnResult(
+    2:             turn=turn,
+    2:             phase=phase.name if phase else None,
+    2:             events=events_applied,
+    2:             agent_turns=agent_turns,
+               )
+       
+    1:     def _phase_for_turn(self, turn: int) -> Optional[PhaseConfig]:
+    2:         for phase in self.config.phases:
+    2:             if phase.includes(turn):
+    2:                 return phase
+>>>>>>         return None
+       
+    1:     def _apply_phase_event(self, phase: Optional[PhaseConfig], turn: int) -> List[str]:
+    2:         if not phase:
+>>>>>>             return []
+       
+    2:         events: List[str] = []
+    2:         event_key = (phase.name, turn)
+    2:         if phase.event == "resource_drop" and event_key not in self._applied_events:
+>>>>>>             delta = phase.parameters.get("delta", {})
+>>>>>>             if delta:
+>>>>>>                 for agent_id in self.wrappers:
+>>>>>>                     self.agent_manager.update_state(
+>>>>>>                         agent_id,
+>>>>>>                         memory_append=f"event:{phase.event}",
+>>>>>>                         resources_delta=delta,
+                           )
+>>>>>>                 events.append(f"resource_drop:{delta}")
+>>>>>>                 self._applied_events.add(event_key)
+    2:         return events
+       
+    1:     def _update_state_from_turn(self, agent_id: str, turn: int, turn_result: AgentTurn) -> None:
+    2:         delta: Dict[str, float] = {}
+    2:         state = self.agent_manager.get_agent(agent_id)
+       
+    2:         decision_lower = turn_result.decision.lower()
+    2:         if decision_lower in {"join", "cooperate", "contribute"}:
+    2:             if "stone" in state.resources and state.resources["stone"] > 0:
+    2:                 delta["stone"] = -1.0
+>>>>>>         elif decision_lower in {"collect", "gather"}:
+>>>>>>             delta["stone"] = delta.get("stone", 0.0) + 1.0
+       
+    4:         self.agent_manager.update_state(
+    2:             agent_id,
+    2:             memory_append=f"turn:{turn}:{turn_result.decision}",
+    2:             resources_delta=delta or None,
+    2:             decision=turn_result.decision,
+               )
+       
+    1:     def _append_history(self, agent_id: str, turn: int, turn_result: AgentTurn) -> None:
+    2:         entry = {
+    2:             "role": "assistant",
+    4:             "content": json.dumps(
+    2:                 {
+    2:                     "turn": turn,
+    2:                     "decision": turn_result.decision,
+    2:                     "message": turn_result.message,
+                       }
+                   ),
+               }
+    2:         self.history[agent_id].append(entry)
+       
+    6:     def _write_log_entry(
+               self,
+    1:         turn: int,
+    1:         phase: Optional[PhaseConfig],
+    1:         result: AgentTurn,
+               *,
+    1:         resources: Dict[str, float],
+    1:     ) -> None:
+    2:         if not self._log_handle:
+>>>>>>             raise RuntimeError("Log handle not initialized; run() must set it before logging.")
+    2:         entry = {
+    2:             "turn": turn,
+    2:             "phase": phase.name if phase else None,
+    2:             "agent": result.agent_id,
+    2:             "thought": result.thought,
+    2:             "decision": result.decision,
+    2:             "message": result.message,
+    2:             "action": result.decision,
+    2:             "resources": resources,
+               }
+    2:         self._log_handle.write(json.dumps(entry, ensure_ascii=True) + "\n")
+       
+    2:     @staticmethod
+    2:     def _set_seed(seed: int) -> None:
+    2:         random.seed(seed)
+    2:         try:  # pragma: no cover - optional dependency
+    2:             import numpy as np  # type: ignore
+       
+>>>>>>             np.random.seed(seed)
+    2:         except ImportError:
+    2:             pass

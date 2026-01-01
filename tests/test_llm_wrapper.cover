@@ -1,0 +1,81 @@
+       
+    1: import asyncio
+    1: import unittest
+    1: from unittest.mock import AsyncMock, patch
+       
+    1: from src.agents.llm_wrapper import AgentTurn, LLMWrapper, PromptPayload
+       
+       
+    2: class LLMWrapperTests(unittest.TestCase):
+    1:     def test_parse_response(self):
+    1:         wrapper = LLMWrapper(base_url="http://localhost:9001")
+       
+    1:         fake_payload = {
+    2:             "output": {
+    1:                 "THOUGHT": "Need to help",
+    1:                 "DECISION": "Join",
+    1:                 "MESSAGE": "I'll contribute",
+                   }
+               }
+    1:         turn = wrapper._parse_response("A", fake_payload)
+       
+    1:         self.assertIsInstance(turn, AgentTurn)
+    1:         self.assertEqual(turn.decision, "Join")
+    1:         self.assertEqual(turn.message, "I'll contribute")
+       
+    1:     def test_parse_response_defaults(self):
+    1:         wrapper = LLMWrapper(base_url="http://localhost:9001")
+    1:         data = {"output": {"thought": "", "message": None}}
+    1:         turn = wrapper._parse_response("B", data)
+    1:         self.assertEqual(turn.thought, "")
+    1:         self.assertEqual(turn.decision, "UNKNOWN")
+    1:         self.assertEqual(turn.message, "")
+       
+    1:     def test_chat_retries_then_succeeds(self):
+    1:         wrapper = LLMWrapper(base_url="http://localhost:9001", max_retries=2)
+    1:         attempts = {"count": 0}
+       
+    1:         def fake_send(url, headers, body):
+    2:             attempts["count"] += 1
+    2:             if attempts["count"] == 1:
+    1:                 raise RuntimeError("temporary failure")
+    1:             return {
+    1:                 "output": {"thought": "Recovered", "decision": "Join", "message": "Back online"}
+                   }
+       
+    1:         async def run_chat():
+    2:             with patch.object(wrapper, "_send_request", side_effect=fake_send):
+    2:                 with patch("src.agents.llm_wrapper.asyncio.sleep", new=AsyncMock(return_value=None)) as mocked_sleep:
+    1:                     async def fake_to_thread(func, *args, **kwargs):
+    2:                         return func(*args, **kwargs)
+       
+    2:                     with patch("src.agents.llm_wrapper.asyncio.to_thread", side_effect=fake_to_thread):
+    1:                         payload = PromptPayload(system="sys", history=[])
+    1:                         result = await wrapper.chat("A", payload)
+    1:                         mocked_sleep.assert_awaited()
+    1:                         return result
+       
+    1:         turn = asyncio.run(run_chat())
+    1:         self.assertEqual(attempts["count"], 2)
+    1:         self.assertEqual(turn.decision, "Join")
+    1:         self.assertEqual(turn.message, "Back online")
+       
+    1:     def test_chat_raises_after_exhausting_retries(self):
+    1:         wrapper = LLMWrapper(base_url="http://localhost:9001", max_retries=1)
+       
+    1:         async def run_chat():
+    2:             with patch.object(wrapper, "_send_request", side_effect=RuntimeError("boom")):
+    2:                 with patch("src.agents.llm_wrapper.asyncio.sleep", new=AsyncMock(return_value=None)):
+    1:                     async def fake_to_thread(func, *args, **kwargs):
+    2:                         return func(*args, **kwargs)
+       
+    2:                     with patch("src.agents.llm_wrapper.asyncio.to_thread", side_effect=fake_to_thread):
+    1:                         payload = PromptPayload(system="sys", history=[])
+    1:                         return await wrapper.chat("A", payload)
+       
+    2:         with self.assertRaisesRegex(RuntimeError, "failed after retries"):
+    1:             asyncio.run(run_chat())
+       
+       
+    1: if __name__ == "__main__":
+>>>>>>     unittest.main()
